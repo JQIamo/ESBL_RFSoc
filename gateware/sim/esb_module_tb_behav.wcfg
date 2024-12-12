@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="esb_module_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="esb_module_tb" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
+      <ZoomEndTime time="1,478.000001 us"></ZoomEndTime>
+      <Cursor1Time time="100.000000 us"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="134"></NameColumnWidth>
+      <ValueColumnWidth column_width="66"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="15" />
+   <wvobject type="logic" fp_name="/esb_module_tb/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/esb_module_tb/res">
+      <obj_property name="ElementShortName">res</obj_property>
+      <obj_property name="ObjectShortName">res</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/esb_module_tb/clr">
+      <obj_property name="ElementShortName">clr</obj_property>
+      <obj_property name="ObjectShortName">clr</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/frequency_word">
+      <obj_property name="ElementShortName">frequency_word[31:0]</obj_property>
+      <obj_property name="ObjectShortName">frequency_word[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/amp">
+      <obj_property name="ElementShortName">amp[15:0]</obj_property>
+      <obj_property name="ObjectShortName">amp[15:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/phase_PDH">
+      <obj_property name="ElementShortName">phase_PDH[19:0]</obj_property>
+      <obj_property name="ObjectShortName">phase_PDH[19:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/phase">
+      <obj_property name="ElementShortName">phase[21:0]</obj_property>
+      <obj_property name="ObjectShortName">phase[21:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/multiplier">
+      <obj_property name="ElementShortName">multiplier[7:0]</obj_property>
+      <obj_property name="ObjectShortName">multiplier[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/offset_i">
+      <obj_property name="ElementShortName">offset_i[7:0]</obj_property>
+      <obj_property name="ObjectShortName">offset_i[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/offset_q">
+      <obj_property name="ElementShortName">offset_q[7:0]</obj_property>
+      <obj_property name="ObjectShortName">offset_q[7:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/dut/cs_sine_lut_data_x">
+      <obj_property name="ElementShortName">cs_sine_lut_data_x[14:0]</obj_property>
+      <obj_property name="ObjectShortName">cs_sine_lut_data_x[14:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/i">
+      <obj_property name="ElementShortName">i[15:0]</obj_property>
+      <obj_property name="ObjectShortName">i[15:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/dut/lut[0]">
+      <obj_property name="ElementShortName">[0][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[0][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/q">
+      <obj_property name="ElementShortName">q[15:0]</obj_property>
+      <obj_property name="ObjectShortName">q[15:0]</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/esb_module_tb/pdh_output">
+      <obj_property name="ElementShortName">pdh_output[7:0]</obj_property>
+      <obj_property name="ObjectShortName">pdh_output[7:0]</obj_property>
+   </wvobject>
+</wave_config>
