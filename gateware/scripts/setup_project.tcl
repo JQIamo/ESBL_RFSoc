@@ -157,6 +157,18 @@ connect_bd_net [get_bd_pins xlconcat_0/dout] [get_bd_pins usp_rf_data_converter_
 connect_bd_net [get_bd_pins phase_generator_0/clr] [get_bd_pins xlconstant_1/dout]
 connect_bd_net [get_bd_pins phase_generator_0/sys_rst] [get_bd_pins xlconstant_1/dout]
 
+
+# This lowers the data converter sampling frequency so that the NCO can start without "error 7"
+startgroup
+set_property -dict [list CONFIG.DAC0_Sampling_Rate {4.9152} \
+                         CONFIG.DAC0_Refclk_Freq {491.520} \
+                         CONFIG.DAC0_Outclk_Freq {153.600} \
+                         CONFIG.DAC0_Fabric_Freq {153.600}] [get_bd_cells usp_rf_data_converter_0]
+endgroup
+
+
+
+
 apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {Custom} Manual_Source {Auto}}  [get_bd_pins proc_sys_reset_0/ext_reset_in]
 
 
