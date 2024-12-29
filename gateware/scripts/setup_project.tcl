@@ -162,12 +162,12 @@ connect_bd_net [get_bd_pins phase_generator_0/sys_rst] [get_bd_pins xlconstant_1
 
 # This lowers the data converter sampling frequency so that the NCO can start without "error 7"
 startgroup
-set_property -dict [list CONFIG.DAC0_Sampling_Rate {6.88128}\
+set_property -dict [list CONFIG.DAC0_PLL_Enable {true}\
+                         CONFIG.DAC0_Sampling_Rate {6.88128}\
+                         CONFIG.DAC_Mode00 {0} \
                          CONFIG.DAC0_Refclk_Freq {491.520} \
                          CONFIG.DAC0_Outclk_Freq {430.080} \
-                         CONFIG.DAC0_Fabric_Freq {430.080}
-                         CONFIG.DAC0_Fabric_Freq {307.200} \
-                         CONFIG.DAC_Mode00 {0} \
+                         CONFIG.DAC0_Fabric_Freq {430.080} \
                          CONFIG.DAC_RESERVED_1_00 {0} \
                          CONFIG.DAC_RESERVED_1_01 {0} \
                          CONFIG.DAC_RESERVED_1_02 {0} \
@@ -175,13 +175,6 @@ set_property -dict [list CONFIG.DAC0_Sampling_Rate {6.88128}\
 endgroup
 
 
-
-                         CONFIG.DAC0_Fabric_Freq {307.200} \
-                         CONFIG.DAC_Mode00 {0} \
-                         CONFIG.DAC_RESERVED_1_00 {0} \
-                         CONFIG.DAC_RESERVED_1_01 {0} \
-                         CONFIG.DAC_RESERVED_1_02 {0} \
-                         CONFIG.DAC_RESERVED_1_03 {0}] [get_bd_cells usp_rf_data_converter_0]
 
 set_property -dict [list CONFIG.DAC0_Sampling_Rate {6.88128} \
                          CONFIG.DAC0_Outclk_Freq {430.080} \
@@ -215,19 +208,24 @@ set_property -dict [list CONFIG.c_include_sg {0} \
                         CONFIG.c_addr_width {32}] [get_bd_cells axi_dma_0]
 
 
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {Auto} Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/axi_dma_0/S_AXI_LITE} ddr_seg {Auto} intc_ip {/ps8_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_dma_0/S_AXI_LITE]
 
 startgroup
+
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 smartconnect_0
+endgroup
+set_property -dict [list CONFIG.NUM_MI {1} CONFIG.NUM_SI {2}] [get_bd_cells smartconnect_0]
+set_property name axi_smc [get_bd_cells smartconnect_0]
 
 set_property -dict [list CONFIG.PSU__USE__S_AXI_GP0 {1} CONFIG.PSU__USE__S_AXI_GP1 {1} ] [get_bd_cells zynq_ultra_ps_e_0]
 endgroup
 
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {Auto} Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Master {/zynq_ultra_ps_e_0/M_AXI_HPM0_FPD} Slave {/axi_dma_0/S_AXI_LITE} ddr_seg {Auto} intc_ip {/ps8_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_dma_0/S_AXI_LITE]
 
-startgroup
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {Auto} Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Master {/axi_dma_0/M_AXI_MM2S} Slave {/zynq_ultra_ps_e_0/S_AXI_HPC1_FPD} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC1_FPD]
+# startgroup
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {Auto} Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Master {/axi_dma_0/M_AXI_MM2S} Slave {/zynq_ultra_ps_e_0/S_AXI_HPC1_FPD} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC1_FPD]
 
-endgroup
+# endgroup
 
 # delete_bd_objs [get_bd_addr_segs axi_dma_0/Data_MM2S/SEG_zynq_ultra_ps_e_0_HPC0_DDR_LOW]
 # delete_bd_objs [get_bd_addr_segs axi_dma_0/Data_S2MM/SEG_zynq_ultra_ps_e_0_HPC0_DDR_LOW]

@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="4,446.020 ns"></ZoomStartTime>
-      <ZoomEndTime time="5,193.021 ns"></ZoomEndTime>
-      <Cursor1Time time="5,439.920 ns"></Cursor1Time>
+      <ZoomStartTime time="608.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,353.001 ns"></ZoomEndTime>
+      <Cursor1Time time="20,000.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="126"></NameColumnWidth>
+      <NameColumnWidth column_width="122"></NameColumnWidth>
       <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="7" />
+   <WVObjectSize size="9" />
    <wvobject type="logic" fp_name="/frequency_change_DMA_tb/aclk">
       <obj_property name="ElementShortName">aclk</obj_property>
       <obj_property name="ObjectShortName">aclk</obj_property>
@@ -47,5 +47,13 @@
    <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dut/nco_busy">
       <obj_property name="ElementShortName">nco_busy</obj_property>
       <obj_property name="ObjectShortName">nco_busy</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dac0_nco_update_req">
+      <obj_property name="ElementShortName">dac0_nco_update_req</obj_property>
+      <obj_property name="ObjectShortName">dac0_nco_update_req</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dac0_nco_update_en">
+      <obj_property name="ElementShortName">dac0_nco_update_en</obj_property>
+      <obj_property name="ObjectShortName">dac0_nco_update_en</obj_property>
    </wvobject>
 </wave_config>

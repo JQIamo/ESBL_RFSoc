@@ -321,7 +321,7 @@ end
 assign cs_carrier_dat_r = lut[memadr];
 
 initial begin
-	$readmemh("./lut.init", lut);
+	$readmemh("/storage/Tier3/oliver/git/ESBL_RFSoc/gateware/hdl/lut.init", lut);
 end
 
 reg [37:0] lut_1[0:511];
@@ -333,7 +333,7 @@ end
 assign cs_sine_dat_r = lut_1[memadr_1];
 
 initial begin
-	$readmemh("./lut_1.init", lut_1);
+	$readmemh("/storage/Tier3/oliver/git/ESBL_RFSoc/gateware/hdl/lut_1.init", lut_1);
 end
 
 reg [37:0] lut_2[0:511];
@@ -345,7 +345,7 @@ end
 assign cs_cosine_dat_r = lut_2[memadr_2];
 
 initial begin
-	$readmemh("./lut_2.init", lut_2);
+	$readmemh("/storage/Tier3/oliver/git/ESBL_RFSoc/gateware/hdl/lut_2.init", lut_2);
 end
 
 endmodule

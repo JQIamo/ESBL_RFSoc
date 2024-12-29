@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-import axi4stream_vip_pkg::*;
+// import axi4stream_vip_pkg::*;
 
 
 parameter axi4stream_vip_mst_0_VIP_INTERFACE_MODE     = 0;
@@ -17,15 +17,15 @@ parameter axi4stream_vip_mst_0_VIP_HAS_TLAST          = 0;
 parameter axi4stream_vip_mst_0_VIP_HAS_ACLKEN         = 0;
 parameter axi4stream_vip_mst_0_VIP_HAS_ARESETN        = 1;
 
-typedef axi4stream_mst_agent #(
-  axi4stream_vip_mst_0_VIP_SIGNAL_SET, 
-  axi4stream_vip_mst_0_VIP_DEST_WIDTH,
-  axi4stream_vip_mst_0_VIP_DATA_WIDTH,
-  axi4stream_vip_mst_0_VIP_ID_WIDTH,
-  axi4stream_vip_mst_0_VIP_USER_WIDTH, 
-  axi4stream_vip_mst_0_VIP_USER_BITS_PER_BYTE,
-  axi4stream_vip_mst_0_VIP_HAS_ARESETN
-) axi4stream_vip_mst_0_mst_t;
+// typedef axi4stream_mst_agent #(
+//   axi4stream_vip_mst_0_VIP_SIGNAL_SET, 
+//   axi4stream_vip_mst_0_VIP_DEST_WIDTH,
+//   axi4stream_vip_mst_0_VIP_DATA_WIDTH,
+//   axi4stream_vip_mst_0_VIP_ID_WIDTH,
+//   axi4stream_vip_mst_0_VIP_USER_WIDTH, 
+//   axi4stream_vip_mst_0_VIP_USER_BITS_PER_BYTE,
+//   axi4stream_vip_mst_0_VIP_HAS_ARESETN
+// ) axi4stream_vip_mst_0_mst_t;
  
 
 
