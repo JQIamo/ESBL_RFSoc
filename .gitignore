@@ -4,3 +4,4 @@ gateware/RFSoC4x2*
 *.jou
 *.log
 *.str
+*backups/
