@@ -30,8 +30,6 @@ module serializer_8_bits(
             parallel_input, //8 bit register
             single_ended_out
             
-            //serial_output_p,
-            //serial_output_n //differential node
             );
                     
     
@@ -40,6 +38,19 @@ module serializer_8_bits(
     //output serial_output_p, serial_output_n;
     
     output single_ended_out;
+    
+    wire [7:0] data;
+    
+    assign data[0] = parallel_input[0];
+    assign data[1] = parallel_input[2];
+    assign data[2] = parallel_input[4];
+    assign data[3] = parallel_input[6];
+    assign data[4] = 0; //parallel_input[4];
+    assign data[5] = 0; //parallel_input[4];
+    assign data[6] = 0; //parallel_input[6];
+    assign data[7] = 0; //parallel_input[6];
+    
+    
     //wire single_ended_out;
     
     //assign serial_monitor=single_ended_out;
@@ -51,11 +62,11 @@ module serializer_8_bits(
     // OSERDESE2: Output SERial/DESerializer with bitslip
        //            Artix-7
        // Xilinx HDL Language Template, version 2018.1
-    
+ /*   
        OSERDESE2 #(
           .DATA_RATE_OQ("DDR"),   // DDR, SDR
           .DATA_RATE_TQ("DDR"),   // DDR, BUF, SDR
-          .DATA_WIDTH(8),         // Parallel data width (2-8,10,14)
+          .DATA_WIDTH(4),         // Parallel data width (2-8,10,14)
           .INIT_OQ(1'b0),         // Initial value of OQ output (1'b0,1'b1)
           .INIT_TQ(1'b0),         // Initial value of TQ output (1'b0,1'b1)
           .SERDES_MODE("MASTER"), // MASTER, SLAVE
@@ -83,13 +94,13 @@ module serializer_8_bits(
           .CLKDIV(slow_clock),       // 1-bit input: Divided clock
           // D1 - D8: 1-bit (each) input: Parallel data inputs (1-bit each)
           .D1(parallel_input[0]),
-          .D2(parallel_input[1]),
-          .D3(parallel_input[2]),
-          .D4(parallel_input[3]),
-          .D5(parallel_input[4]),
-          .D6(parallel_input[5]),
-          .D7(parallel_input[6]),
-          .D8(parallel_input[7]),
+          .D2(parallel_input[2]),
+          .D3(parallel_input[4]),
+          .D4(parallel_input[6]),
+//          .D5(parallel_input[4]),
+//          .D6(parallel_input[5]),
+//          .D7(parallel_input[6]),
+//          .D8(parallel_input[7]),
           .OCE(1'b1),             // 1-bit input: Output data clock enable
           .RST(rst),             // 1-bit input: Reset
           // SHIFTIN1 / SHIFTIN2: 1-bit (each) input: Data input expansion (1-bit each)
@@ -111,7 +122,9 @@ module serializer_8_bits(
           // OBUFDS: Differential Output Buffer
           //         Artix-7
           // Xilinx HDL Language Template, version 2018.1
-       /*
+       */
+       
+        /*
           OBUFDS #(
              .IOSTANDARD("DEFAULT"), // Specify the output I/O standard
              .SLEW("FAST")           // Specify the output slew rate
@@ -120,8 +133,29 @@ module serializer_8_bits(
              .OB(serial_output_n),   // Diff_n output (connect directly to top-level port)
              .I(single_ended_out)      // Buffer input
           );
-*/
+        */
+          
+  
      
+       OSERDESE3 #(
+      .DATA_WIDTH(4),                 // Parallel Data Width (4-8)
+      .INIT(1'b0),                    // Initialization value of the OSERDES flip-flops
+      .IS_CLKDIV_INVERTED(1'b0),      // Optional inversion for CLKDIV
+      .IS_CLK_INVERTED(1'b0),         // Optional inversion for CLK
+      .IS_RST_INVERTED(1'b0),         // Optional inversion for RST
+      .SIM_DEVICE("ULTRASCALE_PLUS")  // Set the device version for simulation functionality (ULTRASCALE,
+                                      // ULTRASCALE_PLUS, ULTRASCALE_PLUS_ES1, ULTRASCALE_PLUS_ES2)
+      //.ODDR_MODE("TRUE")
+   )
+   OSERDESE3_inst (
+      .OQ(single_ended_out),         // 1-bit output: Serial Output Data
+      //.T_OUT(T_OUT),   // 1-bit output: 3-state control output to IOB
+      .CLK(fast_clock),       // 1-bit input: High-speed clock
+      .CLKDIV(slow_clock), // 1-bit input: Divided Clock
+      .D(data),           // 8-bit input: Parallel Data Input
+      .RST(rst),       // 1-bit input: Asynchronous Reset
+      .T(1'b0)            // 1-bit input: Tristate input from fabric
+   );
      
      
                            

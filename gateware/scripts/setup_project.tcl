@@ -14,9 +14,11 @@ create_bd_design "main"
 
 add_files -norecurse ./hdl/syntactic_sugar.vh
 add_files -norecurse ./hdl/arbitrary_registers.v
-add_files -norecurse ./hdl/phase_generator.v
+add_files -norecurse ./hdl/phase_generator_parallel.v
 add_files -norecurse ./hdl/frequency_change_DMA.v
+add_files -norecurse ./hdl/serializer_8_bits.v
 update_compile_order -fileset sources_1
+
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
 add_files -fileset sim_1 ./sim/esb_module_tb.v
 update_compile_order -fileset sim_1
@@ -26,13 +28,31 @@ add_files -fileset sim_1 -norecurse ./sim/frequency_change_DMA_tb.sv
 set_property xsim.view .sim/esb_module_tb_behav.wcfg [get_filesets sim_1]
 
 
+add_files -fileset constrs_1 -norecurse ./constraints/4x2_PMOD.xdc
+
+
 update_compile_order -fileset sources_1
+
+
+
+
+#Adding all the external ports used for triggers and for PDH outputs 
+
+create_bd_port -dir I PMOD0_0
+create_bd_port -dir I PMOD0_1
+create_bd_port -dir O PMOD0_4
+create_bd_port -dir O PMOD0_5
+
+
+#Adding all blocks in design
+
+
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:3.4 zynq_ultra_ps_e_0
 endgroup
 
 startgroup
-create_bd_cell -type module -reference phase_generator phase_generator_0
+create_bd_cell -type module -reference phase_generator_parallel phase_generator_0
 endgroup
 
 
@@ -41,37 +61,36 @@ apply_bd_automation -rule xilinx.com:bd_rule:zynq_ultra_ps_e -config {apply_boar
 set_property location {1 140 -248} [get_bd_cells zynq_ultra_ps_e_0]
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:usp_rf_data_converter:2.6 usp_rf_data_converter_0
-set_property -dict [list CONFIG.ADC0_Enable {0} \
-                    CONFIG.ADC0_Fabric_Freq {0.0} \
-                    CONFIG.ADC_Slice00_Enable {false} \
-                    CONFIG.ADC_Decimation_Mode00 {0} \
-                    CONFIG.ADC_Mixer_Type00 {3} \
-                    CONFIG.ADC_RESERVED_1_00 {0} \
-                    CONFIG.ADC_Slice01_Enable {false} \
-                    CONFIG.ADC_Decimation_Mode01 {0} \
-                    CONFIG.ADC_Mixer_Type01 {3} \
-                    CONFIG.ADC_RESERVED_1_02 {0} \
-                    CONFIG.ADC_OBS02 {0} \
-                    CONFIG.DAC0_Enable {1} \
-                    CONFIG.DAC0_PLL_Enable {true} \
-                    CONFIG.DAC0_Sampling_Rate {9.85} \
-                    CONFIG.DAC0_Refclk_Freq {307.813} \
-                    CONFIG.DAC0_Outclk_Freq {307.813} \
-                    CONFIG.DAC0_Fabric_Freq {307.813} \
-                    CONFIG.DAC_Slice00_Enable {true} \
-                    CONFIG.DAC_Interpolation_Mode00 {2} \
-                    CONFIG.DAC_Mixer_Type00 {2} \
-                    CONFIG.DAC_Mixer_Mode00 {0} \
-                    CONFIG.DAC_Coarse_Mixer_Freq00 {3} \
-                    CONFIG.DAC_Mode00 {1} \
-                    CONFIG.DAC_RESERVED_1_00 {0} \
-                    CONFIG.DAC_RESERVED_1_01 {0} \
-                    CONFIG.DAC_RESERVED_1_02 {0} \
-                    CONFIG.DAC_RESERVED_1_03 {0}] [get_bd_cells usp_rf_data_converter_0]
-
-set_property -dict [list CONFIG.DAC0_Fabric_Freq {307.813} \
-                         CONFIG.DAC_Data_Width00 {2} \
-                         CONFIG.DAC_Interpolation_Mode00 {16}] [get_bd_cells usp_rf_data_converter_0]
+set_property -dict [list    CONFIG.DAC_NCO_RTS {true}  \
+                            CONFIG.ADC0_Enable {0}  \
+                            CONFIG.ADC0_Fabric_Freq {0.0}  \
+                            CONFIG.ADC_Slice00_Enable {false}  \
+                            CONFIG.ADC_Decimation_Mode00 {0}  \
+                            CONFIG.ADC_Mixer_Type00 {3}  \
+                            CONFIG.ADC_RESERVED_1_00 {false}  \
+                            CONFIG.ADC_Slice01_Enable {false}  \
+                            CONFIG.ADC_Decimation_Mode01 {0}  \
+                            CONFIG.ADC_Mixer_Type01 {3}  \
+                            CONFIG.ADC_RESERVED_1_02 {false}  \
+                            CONFIG.ADC_OBS02 {false}  \
+                            CONFIG.DAC0_Enable {1}  \
+                            CONFIG.DAC0_PLL_Enable {true}  \
+                            CONFIG.DAC0_Sampling_Rate {6.88128}  \
+                            CONFIG.DAC0_Refclk_Freq {491.520}  \
+                            CONFIG.DAC0_Outclk_Freq {430.080}  \
+                            CONFIG.DAC0_Fabric_Freq {430.080}  \
+                            CONFIG.DAC_Slice00_Enable {true}  \
+                            CONFIG.DAC_Data_Width00 {2}  \
+                            CONFIG.DAC_Interpolation_Mode00 {16}  \
+                            CONFIG.DAC_Mixer_Type00 {2}  \
+                            CONFIG.DAC_Mixer_Mode00 {0}  \
+                            CONFIG.DAC_Invsinc_Ctrl00 {true}  \
+                            CONFIG.DAC_Coarse_Mixer_Freq00 {3}  \
+                            CONFIG.DAC_Mode00 {0}  \
+                            CONFIG.DAC_RESERVED_1_00 {false}  \
+                            CONFIG.DAC_RESERVED_1_01 {false}  \
+                            CONFIG.DAC_RESERVED_1_02 {false}  \
+                            CONFIG.DAC_RESERVED_1_03 {false}] [get_bd_cells usp_rf_data_converter_0]
 
 endgroup
 
@@ -98,15 +117,6 @@ startgroup
 create_bd_cell -type module -reference arbitrary_registers ESBL_control_reg
 endgroup
 
-
-startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 xlconcat_0
-endgroup
-
-startgroup
-set_property -dict [list CONFIG.IN0_WIDTH.VALUE_SRC USER CONFIG.IN1_WIDTH.VALUE_SRC USER] [get_bd_cells xlconcat_0]
-set_property -dict [list CONFIG.IN0_WIDTH {16} CONFIG.IN1_WIDTH {16}] [get_bd_cells xlconcat_0]
-endgroup
 
 
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)}
@@ -142,6 +152,26 @@ startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 proc_sys_reset_0
 endgroup
 
+startgroup
+create_bd_cell -type module -reference serializer_8_bits serializer_8_bits_0
+endgroup
+
+
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0
+endgroup
+
+startgroup
+set_property -dict [list CONFIG.JITTER_SEL {Min_O_Jitter} \
+                         CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {614.4} \
+                         CONFIG.MMCM_DIVCLK_DIVIDE {7} \
+                         CONFIG.MMCM_BANDWIDTH {HIGH} \
+                         CONFIG.MMCM_CLKFBOUT_MULT_F {25.000} \
+                         CONFIG.MMCM_CLKOUT0_DIVIDE_F {2.500} \
+                         CONFIG.CLKOUT1_JITTER {73.951} \
+                         CONFIG.CLKOUT1_PHASE_ERROR {121.275}] [get_bd_cells clk_wiz_0]
+endgroup
+
 
 connect_bd_net [get_bd_pins proc_sys_reset_0/slowest_sync_clk] [get_bd_pins usp_rf_data_converter_0/clk_dac0]
 connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_aresetn] [get_bd_pins usp_rf_data_converter_0/s0_axis_aresetn]
@@ -152,40 +182,27 @@ connect_bd_net [get_bd_pins ESBL_control_reg/reg_3] [get_bd_pins phase_generator
 connect_bd_net [get_bd_pins ESBL_control_reg/reg_4] [get_bd_pins phase_generator_0/q_amp]
 connect_bd_net [get_bd_pins ESBL_control_reg/reg_5] [get_bd_pins phase_generator_0/phase_PDH]
 connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins usp_rf_data_converter_0/s00_axis_tvalid]
-connect_bd_net [get_bd_pins phase_generator_0/i] [get_bd_pins xlconcat_0/In0]
-connect_bd_net [get_bd_pins phase_generator_0/q] [get_bd_pins xlconcat_0/In1]
 connect_bd_net [get_bd_pins usp_rf_data_converter_0/clk_dac0] [get_bd_pins phase_generator_0/sys_clk]
-connect_bd_net [get_bd_pins xlconcat_0/dout] [get_bd_pins usp_rf_data_converter_0/s00_axis_tdata]
+connect_bd_net [get_bd_pins phase_generator_0/packed_output] [get_bd_pins usp_rf_data_converter_0/s00_axis_tdata]
 connect_bd_net [get_bd_pins phase_generator_0/clr] [get_bd_pins xlconstant_1/dout]
 connect_bd_net [get_bd_pins phase_generator_0/sys_rst] [get_bd_pins xlconstant_1/dout]
+connect_bd_net [get_bd_ports PMOD0_4] [get_bd_pins serializer_8_bits_0/single_ended_out]
+connect_bd_net [get_bd_pins phase_generator_0/pdh_output] [get_bd_pins serializer_8_bits_0/parallel_input]
+connect_bd_net [get_bd_pins serializer_8_bits_0/slow_clock] [get_bd_pins usp_rf_data_converter_0/clk_dac0]
+connect_bd_net [get_bd_pins clk_wiz_0/clk_in1] [get_bd_pins usp_rf_data_converter_0/clk_dac0]
+connect_bd_net [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins serializer_8_bits_0/fast_clock]
+connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_pins clk_wiz_0/reset]
+connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_pins serializer_8_bits_0/rst]
 
-
-# This lowers the data converter sampling frequency so that the NCO can start without "error 7"
+# Dummy Connection of Triggers and PDH outputs
 startgroup
-set_property -dict [list CONFIG.DAC0_Sampling_Rate {6.88128}\
-                         CONFIG.DAC0_Refclk_Freq {491.520} \
-                         CONFIG.DAC0_Outclk_Freq {430.080} \
-                         CONFIG.DAC0_Fabric_Freq {430.080}
-                         CONFIG.DAC0_Fabric_Freq {307.200} \
-                         CONFIG.DAC_Mode00 {0} \
-                         CONFIG.DAC_RESERVED_1_00 {0} \
-                         CONFIG.DAC_RESERVED_1_01 {0} \
-                         CONFIG.DAC_RESERVED_1_02 {0} \
-                         CONFIG.DAC_RESERVED_1_03 {0}] [get_bd_cells usp_rf_data_converter_0]
+create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0
 endgroup
+set_property -dict [list CONFIG.C_SIZE {1}] [get_bd_cells util_vector_logic_0]
+connect_bd_net [get_bd_ports PMOD0_1] [get_bd_pins util_vector_logic_0/Op1]
+connect_bd_net [get_bd_ports PMOD0_0] [get_bd_pins util_vector_logic_0/Op2]
+connect_bd_net [get_bd_ports PMOD0_5] [get_bd_pins util_vector_logic_0/Res]
 
-
-
-                         CONFIG.DAC0_Fabric_Freq {307.200} \
-                         CONFIG.DAC_Mode00 {0} \
-                         CONFIG.DAC_RESERVED_1_00 {0} \
-                         CONFIG.DAC_RESERVED_1_01 {0} \
-                         CONFIG.DAC_RESERVED_1_02 {0} \
-                         CONFIG.DAC_RESERVED_1_03 {0}] [get_bd_cells usp_rf_data_converter_0]
-
-set_property -dict [list CONFIG.DAC0_Sampling_Rate {6.88128} \
-                         CONFIG.DAC0_Outclk_Freq {430.080} \
-                         CONFIG.DAC0_Fabric_Freq {430.080}] [get_bd_cells usp_rf_data_converter_0]
 
 
 
@@ -197,6 +214,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:board -config { Board_Interface {Cu
 make_wrapper -files [get_files ./ESBL_RFSoC/ESBL_RFSoC.srcs/sources_1/bd/main/main.bd] -top
 add_files -norecurse ./ESBL_RFSoC/ESBL_RFSoC.gen/sources_1/bd/main/hdl/main_wrapper.v
 update_compile_order -fileset sources_1
+
 
 
 # DMA addition
@@ -224,13 +242,17 @@ endgroup
 
 
 startgroup
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {Auto} Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Master {/axi_dma_0/M_AXI_MM2S} Slave {/zynq_ultra_ps_e_0/S_AXI_HPC1_FPD} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC1_FPD]
-apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {Auto} Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Master {/axi_dma_0/M_AXI_MM2S} Slave {/zynq_ultra_ps_e_0/S_AXI_HPC1_FPD} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC1_FPD]
+
+
+
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/axi_dma_0/M_AXI_MM2S} Slave {/zynq_ultra_ps_e_0/S_AXI_HPC1_FPD} ddr_seg {Auto} intc_ip {New AXI SmartConnect} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC1_FPD]
+
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Clk_slave {Auto} Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 (99 MHz)} Master {/axi_dma_0/M_AXI_MM2S} Slave {/zynq_ultra_ps_e_0/S_AXI_HPC0_FPD} ddr_seg {Auto} intc_ip {/axi_smc} master_apm {0}}  [get_bd_intf_pins zynq_ultra_ps_e_0/S_AXI_HPC0_FPD]
+
+
 
 endgroup
 
-# delete_bd_objs [get_bd_addr_segs axi_dma_0/Data_MM2S/SEG_zynq_ultra_ps_e_0_HPC0_DDR_LOW]
-# delete_bd_objs [get_bd_addr_segs axi_dma_0/Data_S2MM/SEG_zynq_ultra_ps_e_0_HPC0_DDR_LOW]
 delete_bd_objs [get_bd_addr_segs] [get_bd_addr_segs -excluded]
 assign_bd_address
 
@@ -259,3 +281,5 @@ connect_bd_net [get_bd_pins frequency_change_DMA_0/dac0_nco_update_busy] [get_bd
 
 
 validate_bd_design
+
+
