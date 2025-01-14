@@ -40,6 +40,8 @@ reg [7:0] offset_q = 0;
 wire [15:0] i;
 wire [15:0] q;
 wire [7:0] pdh_output;
+wire [7:0] pdh_output_par;
+wire [63:0] packed_output;
 
 
 
@@ -69,7 +71,10 @@ end
 
 
 
-phase_generator dut(
+
+
+
+phase_generator dut1(
 	.f(frequency_word), //32 bit
 	.phase(phase),   //23 bit
 	.multiplier(multiplier),
@@ -80,6 +85,20 @@ phase_generator dut(
 	.i(i),
 	.q(q),
 	.pdh_output(pdh_output),
+	.sys_clk(clk),
+	.sys_rst(res));
+	
+	
+phase_generator_parallel dut2(
+	.f(frequency_word), //32 bit
+	.phase(phase),   //23 bit
+	.multiplier(multiplier),
+	.i_amp(amp),
+	.q_amp(amp),
+	.phase_PDH(phase_PDH),
+	.clr(clr),
+	.packed_output(packed_output),
+	.pdh_output(pdh_output_par),
 	.sys_clk(clk),
 	.sys_rst(res));
 
