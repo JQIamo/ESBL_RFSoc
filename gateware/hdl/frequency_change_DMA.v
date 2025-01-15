@@ -14,6 +14,8 @@ module frequency_change_DMA (
 		S_AXIS_TLAST,
 		// Data is in valid
 		S_AXIS_TVALID,
+        // Input trigger for advancing in the table
+        EX_TRIGGER,
 
         dac0_nco_freq,
         dac0_nco_phase,
@@ -42,6 +44,8 @@ input wire [(C_S_AXIS_TDATA_WIDTH/8)-1 : 0] S_AXIS_TSTRB;
 input wire  S_AXIS_TLAST;
 // Data is in valid
 input wire  S_AXIS_TVALID;
+// Input trigger for advancing in the table
+input wire EX_TRIGGER;
 
 output [47:0] dac0_nco_freq;
 output reg [17:0] dac0_nco_phase = 0;
@@ -56,20 +60,25 @@ output reg [5:0] dac0_nco_update_en = 6'b000111;
     
 input [1:0 ] dac0_nco_update_busy; // bit 0 is the busy state of the NCO and bit 1 is used for multi-tile synchronization
 output reg dac0_nco_update_req;
+wire stop_flag;
+reg trigger=0;
+reg previous_trigger=1;
 
 `define FC_idle 0
-`define FC_transmit 1
+`define FC_triggered 1
 `define FC_pulse 2
 `define FC_wait 3
+`define FC_transmit 4
 
-reg [1:0] state = `FC_idle;
-reg [1:0] next_state = `FC_idle;
+reg [2:0] state = `FC_idle;
+reg [2:0] next_state = `FC_idle;
 reg [7:0] timer = 0; 
 
 wire nco_busy;
 assign nco_busy = dac0_nco_update_busy[0];
 
 assign dac0_nco_freq = S_AXIS_TDATA[47:0];
+assign stop_flag = S_AXIS_TDATA[63];
 
 always @(*)
 begin
@@ -77,7 +86,14 @@ begin
     if (S_AXIS_ARESETN) begin
         case (state)
             `FC_idle:begin
-                if (S_AXIS_TVALID &&  ~ nco_busy) next_state = `FC_pulse;
+                if (S_AXIS_TVALID && trigger  && ~ nco_busy) next_state = `FC_triggered;
+            end
+
+            `FC_triggered:begin
+                if (S_AXIS_TVALID && ~ nco_busy) 
+                    next_state = `FC_pulse;
+                else
+                    next_state = `FC_idle;
             end
 
             `FC_pulse:begin
@@ -89,8 +105,12 @@ begin
             end
 
             `FC_transmit:begin
-                if (~ nco_busy) next_state = `FC_idle;
-
+                if (~ nco_busy)begin
+                    if (stop_flag) 
+                        next_state = `FC_idle;
+                    else 
+                        next_state = `FC_triggered;
+                end
             end
 
             default: begin
@@ -108,6 +128,14 @@ begin
     state <= next_state;
 end
 
+
+always @(posedge S_AXIS_ACLK)
+begin
+    previous_trigger <= EX_TRIGGER;
+    trigger <= previous_trigger && (!EX_TRIGGER);
+end
+
+
 always @(*)
 begin
     dac0_nco_update_req = 0;
@@ -115,9 +143,12 @@ begin
 
     case (state)
             `FC_idle:begin
-                S_AXIS_TREADY = 1;
-
+                S_AXIS_TREADY = 0;
             end
+
+            `FC_triggered:begin
+                S_AXIS_TREADY = 1;
+            end            
 
             `FC_pulse:begin
                 dac0_nco_update_req = 1;
@@ -132,6 +163,7 @@ begin
             `FC_transmit:begin
                 S_AXIS_TREADY = 0;
             end
+
             default:begin
                 dac0_nco_update_req = 0;
                 S_AXIS_TREADY = 0;
@@ -148,9 +180,7 @@ begin
     timer <= 0;
     else
     timer <= timer + 1;
-
 end
-
 
 
 
