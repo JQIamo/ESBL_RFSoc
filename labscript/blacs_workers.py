@@ -44,22 +44,22 @@ class ESBL_RFSoCWorker(Worker):
             group = hdf5_file['/devices/'+device_name]
             if 'esbl_programmed_ramp_list' in group:
                 ramp_list = group['TABLE_DATA%i'%self.channel][:]
-                if ramp_list[2] == None:
-                    if self.last_frequency == None:
-                        response = self.send_and_receive("Q?")
-                        if response[:2] == "E ":
-                            raise Exception(response)
-                        else:
-                            _,response = response.split(":")
-                            fc,_ = response.split("MHz")
-                            startfreq = int(float(fc)*1e6)
+                if self.last_frequency == None:
+                    response = self.send_and_receive("Q?")
+                    if response[:2] == "E ":
+                        raise Exception(response)
                     else:
-                        startfreq = self.last_frequency
+                        _,response = response.split(":")
+                        fc,_ = response.split("MHz")
+                        startfreq = int(float(fc)*1e6)
                 else:
-                    startfreq = ramp_list[2]
+                    startfreq = self.last_frequency
 
-                response = self.send_and_receive("ASC "+str(int(startfreq))+","+str(int(ramp_list[0]))+","+str(int(ramp_list[1])))
-                self.last_frequency = ramp_list[0]
+                msg = "SSC "+str(int(startfreq))+","
+                for i in range(len(ramp_list)//2):
+                    msg += str(int(ramp_list[2*i]))+","+str(float(ramp_list[2*i+1]))+","
+                response = self.send_and_receive(msg)
+                self.last_frequency = ramp_list[-2]
                 print(response)
         return {}
 

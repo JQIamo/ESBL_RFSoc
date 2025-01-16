@@ -28,7 +28,8 @@ class ESBL_RFSoCTab(DeviceTab):
         layout = self.get_tab_layout()
         ui_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ESBL_RFSoC.ui')
         self.ui = UiLoader().load(ui_filepath)
-        self.ui.FCLineEdit.textEdited.connect(self.setFC)
+        self.ui.FCLineEdit.textEdited.connect(self.rampFC)
+        self.ui.FreqjumpPushButton.released.connect(self.setFC)
         self.ui.acquirePushButton.released.connect(self.acquireConfig)
         self.ui.configPushButton.released.connect(self.sendConfig)
         self.ui.rampPushButton.released.connect(self.sendAsyncRamp)
@@ -41,12 +42,15 @@ class ESBL_RFSoCTab(DeviceTab):
         self.ui.helpPushButton.released.connect(self.help)
         self.ui.shutdownPushButton.released.connect(self.shutdown)
         self.ui.rebootPushButton.released.connect(self.reboot)
+        self.ui.intClkPushButton.released.connect(self.setIntClk)
+        self.ui.extClkPushButton.released.connect(self.setExtClk)
+        self.ui.softwareTrigPushButton.released.connect(self.softwareTrig)
         self.ui.shutdownPushButton.setStyleSheet("background-color : rgb(255, 71, 26);border: 2px solid") 
         self.ui.rebootPushButton.setStyleSheet("background-color : rgb(255, 71, 26);border: 2px solid") 
         self.ui.endPushButton.setStyleSheet("background-color : rgb(255, 71, 26);border: 2px solid") 
+        self.ui.helpPushButton.setStyleSheet("background-color : rgb(255, 153, 51);border: 2px solid") 
 
         layout.addWidget(self.ui)
-        
         
         connection_object = self.settings['connection_table'].find_by_name(self.device_name)
         connection_table_properties = connection_object.properties
@@ -60,6 +64,9 @@ class ESBL_RFSoCTab(DeviceTab):
         except:
             self.TCPIP_address = self.default_TCPIP_address
         
+        self.acquireConfig()
+        self.default_stepsize = 1e4
+
     def initialise_workers(self):
         # Create and set the primary worker
         self.create_worker("main_worker",
@@ -75,6 +82,7 @@ class ESBL_RFSoCTab(DeviceTab):
 
     @define_state(MODE_MANUAL, queue_state_indefinitely=True, delete_stale_states=True)
     def pass_current_freq(self,freq):
+        self.current_freq = freq
         yield(self.queue_work(self.primary_worker, 'set_last_frequency',freq))
 
     def send_and_receive(self,message):
@@ -89,9 +97,21 @@ class ESBL_RFSoCTab(DeviceTab):
             response = "E "+str(e)
         return response
 
-    def setFC(self):
+    def rampFC(self):
         try:
             message = int(self.ui.FCLineEdit.textEdited.text())
+        except:
+            self.ui.textBrowser.setStyleSheet('color: red')
+            self.ui.textBrowser.setText("Error: Carrier Frequency is not an integer.")
+            return 
+        received = self.send_and_receive("ASC "+str(self.current_freq)+","+str(message)+","+str(self.default_stepsize))
+        self.pass_current_freq(message)
+        self.ui.textBrowser.setStyleSheet('color: black')
+        self.ui.textBrowser.setText(received)
+
+    def setFC(self):
+        try:
+            message = int(self.ui.FreqjumpLineEdit.textEdited.text())
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Carrier Frequency is not an integer.")
@@ -322,7 +342,7 @@ class ESBL_RFSoCTab(DeviceTab):
         msg.setIcon(QMessageBox.Warning)
         msg.setStandardButtons(QMessageBox.Cancel|QMessageBox.Ok)
         msg.setDefaultButton(QMessageBox.Cancel)
-        msg.setInformativeText("You will need to access the board through ssh to restart it.")
+        msg.setInformativeText("You may lose your laser lock by rebooting the RFSoC board.")
         def reboot_check(i):
             if i.text() == "Ok" or i.text() == "OK":
                 response = self.send_and_receive("REBOOT")
@@ -330,3 +350,18 @@ class ESBL_RFSoCTab(DeviceTab):
                 self.ui.textBrowser.setText(response)
         msg.buttonClicked.connect(reboot_check)
         msg.exec()
+
+    def setIntClk(self):
+        response = self.send_and_receive("INTCLK")
+        self.ui.textBrowser.setStyleSheet('color: black')
+        self.ui.textBrowser.setText(response)
+    
+    def setExtClk(self):
+        response = self.send_and_receive("EXTCLK")
+        self.ui.textBrowser.setStyleSheet('color: black')
+        self.ui.textBrowser.setText(response)
+
+    def softwareTrig(self):
+        response = self.send_and_receive("STR")
+        self.ui.textBrowser.setStyleSheet('color: black')
+        self.ui.textBrowser.setText(response)
