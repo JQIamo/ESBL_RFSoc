@@ -1,20 +1,3 @@
-# Editted from FunctionRunner by Oliver Tu, 06/2023                 #
-#####################################################################
-#                                                                   #
-# /labscript_devices/ESBL_RFSoC/blacs_workers.py                       #
-#                                                                   #
-# Copyright 2019, Monash University and contributors                #
-#                                                                   #
-# This file is part of labscript_devices, in the labscript suite    #
-# (see http://labscriptsuite.org), and is licensed under the        #
-# Simplified BSD License. See the license.txt file in the root of   #
-# the project for the full license.                                 #
-#                                                                   #
-#####################################################################
-import os
-import numpy as np
-import labscript_utils.h5_lock
-# import h5py
 from blacs.tab_base_classes import Worker
 import socket
 
@@ -23,6 +6,7 @@ class ESBL_RFSoCWorker(Worker):
     def init(self):
         global h5py; import h5py 
         self.last_frequency = None
+        self.defualt_freqstep = 1e4
 
     def program_manual(self, values):
         return {}
@@ -38,6 +22,9 @@ class ESBL_RFSoCWorker(Worker):
 
     def set_last_frequency(self,freq):
         self.last_frequency = freq
+
+    def set_default_freqstep(self,freqstep):
+        self.defualt_freqstep = freqstep
 
     def transition_to_buffered(self, device_name, h5_file, initial_values, fresh):
         with h5py.File(h5_file, 'r') as hdf5_file:
@@ -57,7 +44,12 @@ class ESBL_RFSoCWorker(Worker):
 
                 msg = "SSC "+str(int(startfreq))+","
                 for i in range(len(ramp_list)//2):
-                    msg += str(int(ramp_list[2*i]))+","+str(float(ramp_list[2*i+1]))+","
+                    msg += str(int(ramp_list[2*i]))+","
+                    freqstep = int(ramp_list[2*i+1])
+                    if freqstep == 0:
+                        freqstep = self.defualt_freqstep
+                    msg += str(freqstep)+","
+                msg = msg[:-1]
                 response = self.send_and_receive(msg)
                 self.last_frequency = ramp_list[-2]
                 print(response)

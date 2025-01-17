@@ -15,7 +15,9 @@ def start_server(host="192.168.2.99", port=6750):
         pass
     class ESBL(BaseOverlay):
         def __init__(self):
-            Overlay.__init__(self,'main.bit')
+            Overlay.__init__(self,'/home/xilinx/ESBL/main.bit')
+            self.mod_sample_rate = 307_200_000
+            self.DMA_max_length = 1048576 # There is an upper limits of the allocatable DMA buffer size
             if self.is_loaded():
                 self.lock = threading.Lock()
                 self.i2c_initialized = False
@@ -25,8 +27,6 @@ def start_server(host="192.168.2.99", port=6750):
                                 self.ip_dict['ESBL_control_reg']['addr_range']).array
                 self.init_rf_clks()
                 self.dma_init()
-                self.mod_sample_rate = 307_200_000
-                self.DMA_max_length = 1048576 # There is an upper limits of the allocatable DMA buffer size
                 self.dmasender = self.axi_dma_0.sendchannel
 
                 self.freq = 0.001
@@ -140,7 +140,7 @@ def start_server(host="192.168.2.99", port=6750):
                 self.reg[6] = 0
                 self.reg[6] = 1
 
-        def ramp_generator(self,frequency_table,step_size_table,sampling_rate = 9_830_400_000):
+        def ramp_generator(self,frequency_table,step_size_table,sampling_rate = 4_915_200_000):
             # Frequencies in Hz
             XRFDC_NCO_FREQ_MULTIPLIER = np.array(0x1 << 48,dtype = np.uint64)
             freqList = np.array([],dtype = np.uint64)
@@ -150,7 +150,7 @@ def start_server(host="192.168.2.99", port=6750):
                 startfreq = endfreq
                 endfreq = frequency_table[i+1]
                 stepnum = int(abs(endfreq-startfreq)//step_size_table[i]+1)
-                freqramp = np.linspace(startfreq,endfreq,stepnum)
+                freqramp = np.linspace(startfreq,endfreq,stepnum,dtype = np.float64)
                 freqramp = np.array( (freqramp * XRFDC_NCO_FREQ_MULTIPLIER) // sampling_rate,dtype = np.uint64)
                 freqramp[-1] = freqramp[-1]| 1<<63
                 freqList = np.concatenate((freqList,freqramp))

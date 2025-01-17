@@ -1,19 +1,6 @@
-#####################################################################
-#                                                                   #
-# /labscript_devices/PrawnBlaster/blacs_tab.py                      #
-#                                                                   #
-# Copyright 2021, Philip Starkey                                    #
-#                                                                   #
-# This file is part of labscript_devices, in the labscript suite    #
-# (see http://labscriptsuite.org), and is licensed under the        #
-# Simplified BSD License. See the license.txt file in the root of   #
-# the project for the full license.                                 #
-#                                                                   #
-#####################################################################
 from blacs.device_base_class import DeviceTab
 from blacs.tab_base_classes import MODE_MANUAL, define_state
 import os
-import numpy as np
 import socket
 from qtutils.qt.QtCore import *
 from qtutils.qt.QtGui import *
@@ -24,6 +11,7 @@ class ESBL_RFSoCTab(DeviceTab):
     def initialise_GUI(self):        
         self.default_TCPIP_port = 6750
         self.default_TCPIP_address = '192.168.2.99'
+        self.default_stepsize = 1e4
 
         layout = self.get_tab_layout()
         ui_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ESBL_RFSoC.ui')
@@ -31,6 +19,7 @@ class ESBL_RFSoCTab(DeviceTab):
         self.ui.FCLineEdit.textEdited.connect(self.rampFC)
         self.ui.FreqjumpPushButton.released.connect(self.setFC)
         self.ui.acquirePushButton.released.connect(self.acquireConfig)
+        self.ui.freqStepPushButton.released.connect(self.setFreqStep)
         self.ui.configPushButton.released.connect(self.sendConfig)
         self.ui.rampPushButton.released.connect(self.sendAsyncRamp)
         self.ui.VOPPushButton.released.connect(self.setVOP)
@@ -65,7 +54,6 @@ class ESBL_RFSoCTab(DeviceTab):
             self.TCPIP_address = self.default_TCPIP_address
         
         self.acquireConfig()
-        self.default_stepsize = 1e4
 
     def initialise_workers(self):
         # Create and set the primary worker
@@ -85,6 +73,11 @@ class ESBL_RFSoCTab(DeviceTab):
         self.current_freq = freq
         yield(self.queue_work(self.primary_worker, 'set_last_frequency',freq))
 
+    @define_state(MODE_MANUAL, queue_state_indefinitely=True, delete_stale_states=True)
+    def pass_freq_step(self,freqstep):
+        self.default_stepsize = freqstep
+        yield(self.queue_work(self.primary_worker, 'set_default_freqstep',freqstep))
+
     def send_and_receive(self,message):
         try:
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -99,7 +92,7 @@ class ESBL_RFSoCTab(DeviceTab):
 
     def rampFC(self):
         try:
-            message = int(self.ui.FCLineEdit.textEdited.text())
+            message = int(self.ui.FCLineEdit.text())
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Carrier Frequency is not an integer.")
@@ -111,7 +104,7 @@ class ESBL_RFSoCTab(DeviceTab):
 
     def setFC(self):
         try:
-            message = int(self.ui.FreqjumpLineEdit.textEdited.text())
+            message = int(self.ui.FreqjumpLineEdit.text())
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Carrier Frequency is not an integer.")
@@ -158,11 +151,22 @@ class ESBL_RFSoCTab(DeviceTab):
         pd=float(pd)
         self.ui.PDLineEdit.setText(str(pd))
         self.pass_current_freq(fc)
+        self.ui.freqStepLineEdit.setText(str(self.default_stepsize))
 
+    def setFreqStep(self):
+        try:
+            message = int(self.ui.freqStepLineEdit.text())
+        except:
+            self.ui.textBrowser.setStyleSheet('color: red')
+            self.ui.textBrowser.setText("Error: Frequency Ramp Step is not an integer.")
+            return 
+        self.pass_freq_step(message)
+        self.ui.textBrowser.setStyleSheet('color: black')
+        self.ui.textBrowser.setText('Defulat Frequency Ramp Step set to '+str(message))
 
     def sendConfig(self):
         try:
-            fm = self.ui.FMLineEdit.textEdited.text().replace(" ","")
+            fm = self.ui.FMLineEdit.text().replace(" ","")
             if fm=="":
                 fm=None
             else:
@@ -172,7 +176,7 @@ class ESBL_RFSoCTab(DeviceTab):
             self.ui.textBrowser.setText("Error: Modulation Frequency is not an integer.")
             return 
         try:
-            depth = self.ui.MDLineEdit.textEdited.text().replace(" ","")
+            depth = self.ui.MDLineEdit.text().replace(" ","")
             if depth=="":
                 depth=None
             else:
@@ -182,7 +186,7 @@ class ESBL_RFSoCTab(DeviceTab):
             self.ui.textBrowser.setText("Error: Modulation Depth is not an integer.")
             return 
         try:
-            sp = self.ui.SPLineEdit.textEdited.text().replace(" ","")
+            sp = self.ui.SPLineEdit.text().replace(" ","")
             if sp=="":
                 sp=None
             else:
@@ -192,7 +196,7 @@ class ESBL_RFSoCTab(DeviceTab):
             self.ui.textBrowser.setText("Error: Modulation Phase is not a float.")
             return 
         try:
-            sa = self.ui.SALineEdit.textEdited.text().replace(" ","")
+            sa = self.ui.SALineEdit.text().replace(" ","")
             if sa=="":
                 sa=None
             else:
@@ -202,7 +206,7 @@ class ESBL_RFSoCTab(DeviceTab):
             self.ui.textBrowser.setText("Error: Modulation Amplitude is not a float.")
             return 
         try:
-            ca = self.ui.CALineEdit.textEdited.text().replace(" ","")
+            ca = self.ui.CALineEdit.text().replace(" ","")
             if ca=="":
                 ca=None
             else:
@@ -212,7 +216,7 @@ class ESBL_RFSoCTab(DeviceTab):
             self.ui.textBrowser.setText("Error: Carrier Amplitude is not a float.")
             return 
         try:
-            pd = self.ui.PDLineEdit.textEdited.text().replace(" ","")
+            pd = self.ui.PDLineEdit.text().replace(" ","")
             if pd=="":
                 pd=None
             else:
@@ -247,19 +251,19 @@ class ESBL_RFSoCTab(DeviceTab):
 
     def sendAsyncRamp(self):
         try:
-            startfreq = int(self.ui.rampStartLineEdit.textEdited.text())
+            startfreq = int(self.ui.rampStartLineEdit.text())
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Start Frequency is not an integer.")
             return 
         try:
-            endfreq = int(self.ui.rampEndLineEdit.textEdited.text())
+            endfreq = int(self.ui.rampEndLineEdit.text())
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: End Frequency is not an integer.")
             return 
         try:
-            stepnum = int(self.ui.rampNumLineEdit.textEdited.text())
+            stepnum = int(self.ui.rampNumLineEdit.text())
             if stepnum < 1:
                 raise ValueError
         except:
@@ -273,7 +277,7 @@ class ESBL_RFSoCTab(DeviceTab):
 
     def setVOP(self):
         try:
-            vop = int(self.ui.VOPLineEdit.textEdited.text())
+            vop = int(self.ui.VOPLineEdit.text())
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: VOP is not an integer.")

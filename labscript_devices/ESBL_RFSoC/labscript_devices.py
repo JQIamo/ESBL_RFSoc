@@ -15,7 +15,7 @@ class ESBL_RFSoC(Device):
         self.BLACS_connection = name
         self.programmed_ramp_list = []
 
-    def rampto(self, destination_freq, stepsize=10000):
+    def rampto(self, destination_freq, stepsize=0):
         self.programmed_ramp_list.append(destination_freq)
         self.programmed_ramp_list.append(stepsize)
 

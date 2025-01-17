@@ -1,0 +1,12 @@
+[Unit]
+Description=ESBL Startup Script
+Requires=bootpy.service
+After=bootpy.service
+
+[Service]
+Type=forking
+User=root
+ExecStart=/home/xilinx/ESBL/ESBL_autostart.sh
+
+[Install]
+WantedBy=multi-user.target
