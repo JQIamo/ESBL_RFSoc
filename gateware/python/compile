@@ -1,7 +1,7 @@
 #!/bin/bash
-python ./esbl_parallel_with_PDH.py
-awk '{gsub(/readmemh\("/, "readmemh(\"/home/fpga/restelli_git/ESBL_RFSoc/gateware/hdl/lut/phase_generator_parallel/")} 1' phase_generator.v > tmp
-mv -f tmp phase_generator.v
+python ./esbl_and_NCO_with_PDH.py
+awk '{gsub(/readmemh\("/, "readmemh(\"/home/fpga/restelli_git/ESBL_RFSoc/gateware/hdl/lut/phase_generator_parallel/")} 1' phase_generator_parallel.v > tmp
+mv -f tmp phase_generator_parallel.v
 mv phase_generator_parallel.v ../hdl/
 mv *.init ../hdl/lut/phase_generator_parallel
 
