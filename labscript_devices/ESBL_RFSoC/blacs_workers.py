@@ -36,9 +36,9 @@ class ESBL_RFSoCWorker(Worker):
                     if response[:2] == "E ":
                         raise Exception(response)
                     else:
-                        _,response = response.split(":")
-                        fc,_ = response.split("MHz")
-                        startfreq = int(float(fc)*1e6)
+                        _,response = response.split(":",1)
+                        fc,_ = response.split("MHz",1)
+                        startfreq = int(round(float(fc)*1e6))
                 else:
                     startfreq = self.last_frequency
 

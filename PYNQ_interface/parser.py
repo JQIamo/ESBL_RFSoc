@@ -5,6 +5,7 @@ import socket
 import xrfclk
 import threading
 from subprocess import call
+import pickle
 
 def start_server(host="192.168.2.99", port=6750):
     server_stopEvent = threading.Event()
@@ -109,12 +110,14 @@ def start_server(host="192.168.2.99", port=6750):
                 self.reg[1] = depth
 
         def set_VOP(self,vop=20000):
-            if vop > 40000:
-                return 0
+            if vop > 0 and vop < 2250:
+                return 2
             elif vop > 32000:
                 return 1
             elif vop < -32000 and vop > -40000:
                 vop = - vop
+            elif vop < -40000:
+                return 3
             with self.lock:
                 self.radio.dac_tiles[0].blocks[0].SetDACVOP(vop)
                 self.radio.dac_tiles[0].blocks[0].UpdateEvent(1)
@@ -150,8 +153,8 @@ def start_server(host="192.168.2.99", port=6750):
                 startfreq = endfreq
                 endfreq = frequency_table[i+1]
                 stepnum = int(abs(endfreq-startfreq)//step_size_table[i]+1)
-                freqramp = np.linspace(startfreq,endfreq,stepnum,dtype = np.float64)
-                freqramp = np.array( (freqramp * XRFDC_NCO_FREQ_MULTIPLIER) // sampling_rate,dtype = np.uint64)
+                freqramp = np.linspace(startfreq,endfreq,stepnum,dtype=np.float64)
+                freqramp = np.array((freqramp * XRFDC_NCO_FREQ_MULTIPLIER) // sampling_rate,dtype = np.uint64)
                 freqramp[-1] = freqramp[-1]| 1<<63
                 freqList = np.concatenate((freqList,freqramp))
                 totalstep += stepnum
@@ -171,9 +174,29 @@ def start_server(host="192.168.2.99", port=6750):
                     data = b'\x01\x47\x1A' # Only works for LMK0482x series
                     f.write(data)
 
+        def save_current_settings(self):
+            with self.lock:
+                mod_configs = self.reg.copy()[:6].tolist()
+            current_configurations = [esbl.freq]+mod_configs+[self.currentVOP]
+            with open("init_settings.pkl","wb+") as f:
+                pickle.dump(current_configurations,f)
+
+        def load_saved_settings(self):
+            try:
+                with open("init_settings.pkl","rb") as f:
+                    saved_configurations = pickle.load(f)
+            except:
+                return True
+            with self.lock:
+                self.freq = saved_configurations[0]
+                for i in range(6):
+                    self.reg[i] = saved_configurations[i+1]
+            return False
+
+
 
     esbl = ESBL()
-
+    esbl.load_saved_settings()
 
 
     def handle_client(client_socket):
@@ -189,27 +212,27 @@ def start_server(host="192.168.2.99", port=6750):
                     message, buffer = buffer.split(";", 1)
                     # Handle instructions
                     if "FC" in message:
-                        _,message = message.split("FC")
+                        _,message = message.split("FC",1)
                         esbl.freq = float(message)/1e6
                         client_socket.sendall("Carrier frequency set".encode("ascii"))
                     elif "ASC" in message:
                         # Asynchronous frequency scan
-                        _,message = message.split("ASC")
-                        startfreq,endfreq,stepsize = message.split(",")
-                        flist,snum = esbl.ramp_generator([int(startfreq),int(endfreq)],[float(stepsize)])
+                        _,message = message.split("ASC",1)
+                        startfreq,endfreq,stepsize = message.split(",",2)
+                        flist,snum = esbl.ramp_generator([int(round(float(startfreq))),int(round(float(endfreq)))],[float(stepsize)])
                         esbl.send_buffer[:int(snum)] = flist 
                         esbl.dma_transfer(int(snum)*8)
                         esbl.dma_software_trigger()
                         client_socket.sendall("DMA started".encode("ascii"))
                     elif "SSC" in message:
                         # Synchronous frequency scan
-                        _,message = message.split("SSC")
+                        _,message = message.split("SSC",1)
                         freqtable = []
                         stepsize_table = []
                         while len(message) > 1:
-                            freq,message = message.split(",")
-                            freqtable.append(int(freq))
-                            stepsize,message = message.split(",")
+                            freq,message = message.split(",",1)
+                            freqtable.append(int(round(float(freq))))
+                            stepsize,message = message.split(",",1)
                             stepsize_table.append(float(stepsize))
                         flist,snum = esbl.ramp_generator(freqtable,stepsize_table)
                         esbl.send_buffer[:int(snum)] = flist 
@@ -218,33 +241,37 @@ def start_server(host="192.168.2.99", port=6750):
                         esbl.dma_software_trigger()
                         client_socket.sendall("DMA triggered".encode("ascii"))
                     elif "FM" in message:
-                        _,message = message.split("FM")
-                        esbl.set_mod_frequency(int(message))
+                        _,message = message.split("FM",1)
+                        esbl.set_mod_frequency(int(round(float(message))))
                         client_socket.sendall("Modulation frequency set".encode("ascii"))
                     elif "AM" in message:
-                        _,message = message.split("AM")
+                        _,message = message.split("AM",1)
                         check = esbl.set_VOP(int(32000*float(message)))
                         if check == 1:
                             client_socket.sendall(f"Warning: you are asking for a VOP greater than typical value;if you insist please add a minus sign before the value;".encode("ascii"))
+                        elif check == 2:
+                            raise ValueError("Error: you are asking for a VOP smaller than the minimal value of 2250 uA (corresponding to 7.05 %);".encode("ascii"))
+                        elif check == 3:
+                            raise ValueError("Error: you are asking for a VOP greater than the maximal value of 40000 uA (corresponding to 125 %);".encode("ascii"))
                         client_socket.sendall("VOP set".encode("ascii"))
                     elif "PM" in message:
-                        _,message = message.split("PM")
-                        esbl.set_PDH_phase(int(message))
+                        _,message = message.split("PM",1)
+                        esbl.set_PDH_phase(int(round(float(message))))
                         client_socket.sendall("Reference phase offset set".encode("ascii"))
                     elif "MD" in message:
-                        _,message = message.split("MD")
-                        esbl.set_mod_depth(int(message))
+                        _,message = message.split("MD",1)
+                        esbl.set_mod_depth(int(round(float(message))))
                         client_socket.sendall("Amplitude depth set".encode("ascii"))
                     elif "SA" in message:
-                        _,message = message.split("SA")
-                        esbl.set_i_ampl(int(float(message)*0x0000FFFF))
+                        _,message = message.split("SA",1)
+                        esbl.set_i_ampl(int(round(float(message)*0x0000FFFF)))
                         client_socket.sendall("I amplitude set".encode("ascii"))
                     elif "CA" in message:
-                        _,message = message.split("CA")
-                        esbl.set_q_ampl(int(float(message)*0x0000FFFF))
+                        _,message = message.split("CA",1)
+                        esbl.set_q_ampl(int(round(float(message)*0x0000FFFF)))
                         client_socket.sendall("Q amplitude set".encode("ascii"))
                     elif "SP" in message:
-                        _,message = message.split("SP")
+                        _,message = message.split("SP",1)
                         esbl.set_phase_difference(float(message))
                         client_socket.sendall("IQ phase difference set".encode("ascii"))
                     elif "EXTCLK" in message:
@@ -290,6 +317,14 @@ def start_server(host="192.168.2.99", port=6750):
                         else:
                             content = "On board error log:\n"+content
                         client_socket.sendall(content.encode("ascii"))
+                    elif "SAVE" in message:
+                        esbl.save_current_settings()
+                        client_socket.sendall("Configurations saved".encode("ascii"))
+                    elif "LOAD" in message:
+                        if esbl.load_saved_settings():
+                            client_socket.sendall("E: No saved configurations".encode("ascii"))
+                        else:
+                            client_socket.sendall("Saved configurations loaded".encode("ascii"))
                     elif "HELP" in message:
                         help = "The available instructions are (notice the semicolons at the end of each command):\n\
         'FC xx;': Set the carrier frequency to xx Hz\n\
@@ -310,6 +345,8 @@ def start_server(host="192.168.2.99", port=6750):
         'STDMA;': Reinitialize the DMA buffer for frequency scans; only needed if 'CLDMA' is applied\n\
         'CLLOG;': Clean the on board error log; the log file is named as 'parser_error.txt' located in the same directory as this program\n\
         'RDLOG;': Print the error log file on the board\n\
+        'SAVE;': Save the current settings in the board file system; the board will load the configurations at reboot; output power and ramp stepsize will not be saved\n\
+        'LOAD;': Load the previously SAVEd configurtions; output power and ramp stepsize will not be loaded\n\
         'END;': End the on board program; you will need to ssh into the FPGA to restart it\n\
         'REBOOT;': Reboot the FPGA\n\
         'SHUTDOWN;': Shutdown the FPGA\n\
@@ -328,7 +365,7 @@ def start_server(host="192.168.2.99", port=6750):
             client_socket.close()
 
 
-
+    print("start")
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((host, port))
     server.listen(5)

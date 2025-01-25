@@ -16,7 +16,7 @@ class ESBL_RFSoCTab(DeviceTab):
         layout = self.get_tab_layout()
         ui_filepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ESBL_RFSoC.ui')
         self.ui = UiLoader().load(ui_filepath)
-        self.ui.FCLineEdit.textEdited.connect(self.rampFC)
+        self.ui.FCLineEdit.editingFinished.connect(self.rampFC)
         self.ui.FreqjumpPushButton.released.connect(self.setFC)
         self.ui.acquirePushButton.released.connect(self.acquireConfig)
         self.ui.freqStepPushButton.released.connect(self.setFreqStep)
@@ -33,6 +33,8 @@ class ESBL_RFSoCTab(DeviceTab):
         self.ui.rebootPushButton.released.connect(self.reboot)
         self.ui.intClkPushButton.released.connect(self.setIntClk)
         self.ui.extClkPushButton.released.connect(self.setExtClk)
+        self.ui.savePushButton.released.connect(self.saveConfig)
+        self.ui.loadPushButton.released.connect(self.loadConfig)
         self.ui.softwareTrigPushButton.released.connect(self.softwareTrig)
         self.ui.shutdownPushButton.setStyleSheet("background-color : rgb(255, 71, 26);border: 2px solid") 
         self.ui.rebootPushButton.setStyleSheet("background-color : rgb(255, 71, 26);border: 2px solid") 
@@ -84,7 +86,7 @@ class ESBL_RFSoCTab(DeviceTab):
             client.settimeout(1)
             client.connect((self.TCPIP_address, self.TCPIP_port))
             client.sendall((str(message)+";").encode())
-            response = client.recv(4096).decode("ascii")
+            response = client.recv(16384).decode("ascii")
             client.close()
         except Exception as e:
             response = "E "+str(e)
@@ -92,26 +94,42 @@ class ESBL_RFSoCTab(DeviceTab):
 
     def rampFC(self):
         try:
-            message = int(self.ui.FCLineEdit.text())
+            message = int(round(float(self.ui.FCLineEdit.text())))
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Carrier Frequency is not an integer.")
             return 
-        received = self.send_and_receive("ASC "+str(self.current_freq)+","+str(message)+","+str(self.default_stepsize))
+        freq_diff = abs(message-self.current_freq)
+        received = ""
+        warning_flag = False
+        if freq_diff == 0:
+            return
+        elif freq_diff<self.default_stepsize:
+            warning_flag = True
+            received += "Warning: Frequency difference is smaller than a single ramp step; a frequency jump is performed\n"
+        received += self.send_and_receive("ASC "+str(self.current_freq)+","+str(message)+","+str(min(self.default_stepsize,freq_diff)))
         self.pass_current_freq(message)
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if received[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        elif warning_flag:
+            self.ui.textBrowser.setStyleSheet('color: rgb(204, 85, 0)')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(received)
 
     def setFC(self):
         try:
-            message = int(self.ui.FreqjumpLineEdit.text())
+            message = int(round(float(self.ui.FreqjumpLineEdit.text())))
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Carrier Frequency is not an integer.")
             return 
         received = self.send_and_receive("FC "+str(message))
-        self.pass_current_freq(message)
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if received[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
+            self.pass_current_freq(message)
         self.ui.textBrowser.setText(received)
     
     def acquireConfig(self):
@@ -122,40 +140,40 @@ class ESBL_RFSoCTab(DeviceTab):
             return
         self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(received)
-        _,received = received.split(":")
-        fc,received = received.split("MHz")
-        fc = int(float(fc)*1e6)
+        _,received = received.split(":",1)
+        fc,received = received.split("MHz",1)
+        fc = int(round(float(fc)*1e6))
         self.ui.FCLineEdit.setText(str(fc))
-        _,received = received.split(":")
-        fm,received = received.split("Hz")
-        fm = int(fm)
+        _,received = received.split(":",1)
+        fm,received = received.split("Hz",1)
+        fm = int(round(float(fm)))
         self.ui.FMLineEdit.setText(str(fm))
-        _,received = received.split(":")
-        depth,received = received.split("or")
-        depth = int(depth)
+        _,received = received.split(":",1)
+        depth,received = received.split("or",1)
+        depth = int(round(float(depth)))
         self.ui.MDLineEdit.setText(str(depth))
-        _,received = received.split(":")
-        sp,received = received.split("degrees")
+        _,received = received.split(":",1)
+        sp,received = received.split("degrees",1)
         sp=float(sp)
         self.ui.SPLineEdit.setText(str(sp))
-        _,received = received.split(":")
-        sa,received = received.split("%")
+        _,received = received.split(":",1)
+        sa,received = received.split("%",1)
         sa=float(sa)
         self.ui.SALineEdit.setText(str(sa))
-        _,received = received.split(":")
-        ca,received = received.split("%")
+        _,received = received.split(":",1)
+        ca,received = received.split("%",1)
         ca=float(ca)
         self.ui.CALineEdit.setText(str(ca))
-        _,received = received.split(":")
-        pd,received = received.split("degrees")
+        _,received = received.split(":",1)
+        pd,received = received.split("degrees",1)
         pd=float(pd)
-        self.ui.PDLineEdit.setText(str(pd))
+        self.ui.PMLineEdit.setText(str(pd))
         self.pass_current_freq(fc)
         self.ui.freqStepLineEdit.setText(str(self.default_stepsize))
 
     def setFreqStep(self):
         try:
-            message = int(self.ui.freqStepLineEdit.text())
+            message = int(round(float(self.ui.freqStepLineEdit.text())))
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Frequency Ramp Step is not an integer.")
@@ -170,7 +188,7 @@ class ESBL_RFSoCTab(DeviceTab):
             if fm=="":
                 fm=None
             else:
-                fm = int(fm)
+                fm = int(round(float(fm)))
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Modulation Frequency is not an integer.")
@@ -180,7 +198,7 @@ class ESBL_RFSoCTab(DeviceTab):
             if depth=="":
                 depth=None
             else:
-                depth = int(depth)
+                depth = int(round(float(depth)))
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Modulation Depth is not an integer.")
@@ -216,7 +234,7 @@ class ESBL_RFSoCTab(DeviceTab):
             self.ui.textBrowser.setText("Error: Carrier Amplitude is not a float.")
             return 
         try:
-            pd = self.ui.PDLineEdit.text().replace(" ","")
+            pd = self.ui.PMLineEdit.text().replace(" ","")
             if pd=="":
                 pd=None
             else:
@@ -243,27 +261,30 @@ class ESBL_RFSoCTab(DeviceTab):
             response += self.send_and_receive("CA "+str(ca))
             response += "\n"
         if pd:
-            response += self.send_and_receive("PD "+str(pd))
+            response += self.send_and_receive("PM "+str(pd))
 
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
 
 
     def sendAsyncRamp(self):
         try:
-            startfreq = int(self.ui.rampStartLineEdit.text())
+            startfreq = int(round(float(self.ui.rampStartLineEdit.text())))
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: Start Frequency is not an integer.")
             return 
         try:
-            endfreq = int(self.ui.rampEndLineEdit.text())
+            endfreq = int(round(float(self.ui.rampEndLineEdit.text())))
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: End Frequency is not an integer.")
             return 
         try:
-            stepnum = int(self.ui.rampNumLineEdit.text())
+            stepnum = int(round(float(self.ui.rampNumLineEdit.text())))
             if stepnum < 1:
                 raise ValueError
         except:
@@ -271,34 +292,49 @@ class ESBL_RFSoCTab(DeviceTab):
             self.ui.textBrowser.setText("Error: Ramp Step Number is not a positive integer.")
             return 
         response = self.send_and_receive("ASC "+str(startfreq)+","+str(endfreq)+","+str(stepnum))
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
+            self.pass_current_freq(endfreq)
         self.ui.textBrowser.setText(response)
-        self.pass_current_freq(endfreq)
 
     def setVOP(self):
         try:
-            vop = int(self.ui.VOPLineEdit.text())
+            vop = float(self.ui.VOPLineEdit.text())/100
         except:
             self.ui.textBrowser.setStyleSheet('color: red')
             self.ui.textBrowser.setText("Error: VOP is not an integer.")
             return 
-        response = self.send_and_receive("VOP "+str(vop))
-        self.ui.textBrowser.setStyleSheet('color: black')
+        response = self.send_and_receive("AM "+str(vop))
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
 
     def clearDMA(self):
         response = self.send_and_receive("CLDMA")
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
 
     def initDMA(self):
         response = self.send_and_receive("STDMA")
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
 
     def getLog(self):
         response = self.send_and_receive("RDLOG")
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
 
     def clearLog(self):
@@ -307,7 +343,10 @@ class ESBL_RFSoCTab(DeviceTab):
 
     def help(self):
         response = self.send_and_receive("HELP")
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
 
     def terminate(self):
@@ -320,7 +359,10 @@ class ESBL_RFSoCTab(DeviceTab):
         def terminate_check(i):
             if i.text() == "Ok" or i.text() == "OK":
                 response = self.send_and_receive("END")
-                self.ui.textBrowser.setStyleSheet('color: black')
+                if response[:2] == "E ":
+                    self.ui.textBrowser.setStyleSheet('color: red')
+                else:
+                    self.ui.textBrowser.setStyleSheet('color: black')
                 self.ui.textBrowser.setText(response)
         msg.buttonClicked.connect(terminate_check)
         msg.exec()
@@ -335,7 +377,10 @@ class ESBL_RFSoCTab(DeviceTab):
         def shutdown_check(i):
             if i.text() == "Ok" or i.text() == "OK":
                 response = self.send_and_receive("SHUTDOWN")
-                self.ui.textBrowser.setStyleSheet('color: black')
+                if response[:2] == "E ":
+                    self.ui.textBrowser.setStyleSheet('color: red')
+                else:
+                    self.ui.textBrowser.setStyleSheet('color: black')
                 self.ui.textBrowser.setText(response)
         msg.buttonClicked.connect(shutdown_check)
         msg.exec()
@@ -350,22 +395,46 @@ class ESBL_RFSoCTab(DeviceTab):
         def reboot_check(i):
             if i.text() == "Ok" or i.text() == "OK":
                 response = self.send_and_receive("REBOOT")
-                self.ui.textBrowser.setStyleSheet('color: black')
+                if response[:2] == "E ":
+                    self.ui.textBrowser.setStyleSheet('color: red')
+                else:
+                    self.ui.textBrowser.setStyleSheet('color: black')
                 self.ui.textBrowser.setText(response)
         msg.buttonClicked.connect(reboot_check)
         msg.exec()
 
     def setIntClk(self):
         response = self.send_and_receive("INTCLK")
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
     
     def setExtClk(self):
         response = self.send_and_receive("EXTCLK")
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
 
     def softwareTrig(self):
         response = self.send_and_receive("STR")
-        self.ui.textBrowser.setStyleSheet('color: black')
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
+        self.ui.textBrowser.setText(response)
+
+    def saveConfig(self):
+        response = self.send_and_receive("SAVE")
+        self.ui.textBrowser.setText(response)
+
+    def loadConfig(self):
+        response = self.send_and_receive("LOAD")
+        if response[:2] == "E ":
+            self.ui.textBrowser.setStyleSheet('color: red')
+        else:
+            self.ui.textBrowser.setStyleSheet('color: black')
         self.ui.textBrowser.setText(response)
