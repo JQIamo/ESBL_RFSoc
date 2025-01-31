@@ -1,0 +1,7 @@
+gateware/ESBL_RFSoC
+gateware/usp_rf_data_converter*
+gateware/RFSoC4x2*
+*.jou
+*.log
+*.str
+*backups/

@@ -347,7 +347,7 @@ end
 assign cs_cosine_dat_r = lut_2[memadr_2];
 
 initial begin
-	$readmemh("lut_2.init", lut_2);
+	$readmemh("lut_1.init", lut_2);
 end
 
 endmodule

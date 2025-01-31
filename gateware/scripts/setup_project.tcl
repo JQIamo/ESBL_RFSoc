@@ -17,6 +17,7 @@ add_files -norecurse ./hdl/arbitrary_registers.v
 add_files -norecurse ./hdl/phase_generator_parallel.v
 add_files -norecurse ./hdl/frequency_change_DMA.v
 add_files -norecurse ./hdl/serializer_8_bits.v
+add_files -norecurse ./hdl/flag_manager.v
 update_compile_order -fileset sources_1
 
 set_property SOURCE_SET sources_1 [get_filesets sim_1]
@@ -55,9 +56,15 @@ startgroup
 create_bd_cell -type module -reference phase_generator_parallel phase_generator_0
 endgroup
 
+create_bd_cell -type module -reference flag_manager flag_manager_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_1
+
+
 
 apply_bd_automation -rule xilinx.com:bd_rule:zynq_ultra_ps_e -config {apply_board_preset "1" } \
                                                                      [get_bd_cells zynq_ultra_ps_e_0]
+
+set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {and} CONFIG.LOGO_FILE {data/sym_orgate.png}] [get_bd_cells util_vector_logic_1]
 set_property location {1 140 -248} [get_bd_cells zynq_ultra_ps_e_0]
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:usp_rf_data_converter:2.6 usp_rf_data_converter_0
@@ -75,10 +82,10 @@ set_property -dict [list    CONFIG.DAC_NCO_RTS {true}  \
                             CONFIG.ADC_OBS02 {false}  \
                             CONFIG.DAC0_Enable {1}  \
                             CONFIG.DAC0_PLL_Enable {true}  \
-                            CONFIG.DAC0_Sampling_Rate {6.88128}  \
+                            CONFIG.DAC0_Sampling_Rate {9.8304}  \
                             CONFIG.DAC0_Refclk_Freq {491.520}  \
-                            CONFIG.DAC0_Outclk_Freq {430.080}  \
-                            CONFIG.DAC0_Fabric_Freq {430.080}  \
+                            CONFIG.DAC0_Outclk_Freq {307.200}  \
+                            CONFIG.DAC0_Fabric_Freq {307.200}  \
                             CONFIG.DAC_Slice00_Enable {true}  \
                             CONFIG.DAC_Data_Width00 {2}  \
                             CONFIG.DAC_Interpolation_Mode00 {16}  \
@@ -86,7 +93,7 @@ set_property -dict [list    CONFIG.DAC_NCO_RTS {true}  \
                             CONFIG.DAC_Mixer_Mode00 {0}  \
                             CONFIG.DAC_Invsinc_Ctrl00 {true}  \
                             CONFIG.DAC_Coarse_Mixer_Freq00 {3}  \
-                            CONFIG.DAC_Mode00 {0}  \
+                            CONFIG.DAC_Mode00 {1}  \
                             CONFIG.DAC_RESERVED_1_00 {false}  \
                             CONFIG.DAC_RESERVED_1_01 {false}  \
                             CONFIG.DAC_RESERVED_1_02 {false}  \
@@ -195,13 +202,13 @@ connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_pins clk_
 connect_bd_net [get_bd_pins proc_sys_reset_0/peripheral_reset] [get_bd_pins serializer_8_bits_0/rst]
 
 # Dummy Connection of Triggers and PDH outputs
-startgroup
-create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0
-endgroup
-set_property -dict [list CONFIG.C_SIZE {1}] [get_bd_cells util_vector_logic_0]
-connect_bd_net [get_bd_ports PMOD0_1] [get_bd_pins util_vector_logic_0/Op1]
-connect_bd_net [get_bd_ports PMOD0_0] [get_bd_pins util_vector_logic_0/Op2]
-connect_bd_net [get_bd_ports PMOD0_5] [get_bd_pins util_vector_logic_0/Res]
+# startgroup
+# create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0
+# endgroup
+# set_property -dict [list CONFIG.C_SIZE {1}] [get_bd_cells util_vector_logic_0]
+# connect_bd_net [get_bd_ports PMOD0_1] [get_bd_pins util_vector_logic_0/Op1]
+# connect_bd_net [get_bd_ports PMOD0_0] [get_bd_pins util_vector_logic_0/Op2]
+# connect_bd_net [get_bd_ports PMOD0_5] [get_bd_pins util_vector_logic_0/Res]
 
 
 
@@ -274,9 +281,10 @@ connect_bd_net [get_bd_pins frequency_change_DMA_0/dac0_nco_phase_rst] [get_bd_p
 connect_bd_net [get_bd_pins frequency_change_DMA_0/dac0_nco_update_en] [get_bd_pins usp_rf_data_converter_0/dac00_nco_update_en]
 connect_bd_net [get_bd_pins frequency_change_DMA_0/dac0_nco_update_req] [get_bd_pins usp_rf_data_converter_0/dac0_nco_update_req]
 connect_bd_net [get_bd_pins frequency_change_DMA_0/dac0_nco_update_busy] [get_bd_pins usp_rf_data_converter_0/dac0_nco_update_busy]
-
-
-
+connect_bd_net [get_bd_pins ESBL_control_reg/reg_6] [get_bd_pins flag_manager_0/flag_int]
+connect_bd_net [get_bd_ports PMOD0_0] [get_bd_pins util_vector_logic_1/Op2]
+connect_bd_net [get_bd_pins util_vector_logic_1/Res] [get_bd_pins frequency_change_DMA_0/EX_TRIGGER]
+connect_bd_net [get_bd_pins flag_manager_0/software_DMA_trigger] [get_bd_pins util_vector_logic_1/Op1]
 
 
 
