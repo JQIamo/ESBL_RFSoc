@@ -89,7 +89,7 @@ def start_server(host="192.168.2.99", port=6750):
             
         def set_PDH_phase(self,phase):
             #in machine units (20 bits)
-            phase = int((np.unwrap(phase,np.pi) / 360+0.5) * 0x00100000)
+            phase = np.array(np.remainder(phase, 360)*0x00100000,dtype = np.uint32)
             with self.lock:
                 self.reg[5]= phase
 
@@ -159,7 +159,7 @@ def start_server(host="192.168.2.99", port=6750):
                 freqList = np.concatenate((freqList,freqramp))
                 totalstep += stepnum
             if totalstep > self.DMA_max_length:
-                raise ValueError("The frequency table is too long. The maximum length is {self.DMA_max_length} steps.")
+                raise ValueError(f"The frequency table is too long. The maximum length is {self.DMA_max_length} steps.")
             return freqList,stepnum
 
         def set_external_rf_clks(self):
@@ -211,11 +211,11 @@ def start_server(host="192.168.2.99", port=6750):
                 while ";" in buffer:
                     message, buffer = buffer.split(";", 1)
                     # Handle instructions
-                    if "FC" in message:
+                    if "FC " in message:
                         _,message = message.split("FC",1)
                         esbl.freq = float(message)/1e6
                         client_socket.sendall("Carrier frequency set".encode("ascii"))
-                    elif "ASC" in message:
+                    elif "ASC " in message:
                         # Asynchronous frequency scan
                         _,message = message.split("ASC",1)
                         startfreq,endfreq,stepsize = message.split(",",2)
@@ -224,7 +224,7 @@ def start_server(host="192.168.2.99", port=6750):
                         esbl.dma_transfer(int(snum)*8)
                         esbl.dma_software_trigger()
                         client_socket.sendall("DMA started".encode("ascii"))
-                    elif "SSC" in message:
+                    elif "SSC " in message:
                         # Synchronous frequency scan
                         _,message = message.split("SSC",1)
                         freqtable = []
@@ -240,11 +240,11 @@ def start_server(host="192.168.2.99", port=6750):
                     elif "STR" in message:
                         esbl.dma_software_trigger()
                         client_socket.sendall("DMA triggered".encode("ascii"))
-                    elif "FM" in message:
+                    elif "FM " in message:
                         _,message = message.split("FM",1)
                         esbl.set_mod_frequency(int(round(float(message))))
                         client_socket.sendall("Modulation frequency set".encode("ascii"))
-                    elif "AM" in message:
+                    elif "AM " in message:
                         _,message = message.split("AM",1)
                         check = esbl.set_VOP(int(32000*float(message)))
                         if check == 1:
@@ -254,23 +254,23 @@ def start_server(host="192.168.2.99", port=6750):
                         elif check == 3:
                             raise ValueError("Error: you are asking for a VOP greater than the maximal value of 40000 uA (corresponding to 125 %);".encode("ascii"))
                         client_socket.sendall("VOP set".encode("ascii"))
-                    elif "PM" in message:
+                    elif "PM " in message:
                         _,message = message.split("PM",1)
                         esbl.set_PDH_phase(int(round(float(message))))
                         client_socket.sendall("Reference phase offset set".encode("ascii"))
-                    elif "MD" in message:
+                    elif "MD " in message:
                         _,message = message.split("MD",1)
                         esbl.set_mod_depth(int(round(float(message))))
                         client_socket.sendall("Amplitude depth set".encode("ascii"))
-                    elif "SA" in message:
+                    elif "SA " in message:
                         _,message = message.split("SA",1)
                         esbl.set_i_ampl(int(round(float(message)*0x0000FFFF)))
                         client_socket.sendall("I amplitude set".encode("ascii"))
-                    elif "CA" in message:
+                    elif "CA " in message:
                         _,message = message.split("CA",1)
                         esbl.set_q_ampl(int(round(float(message)*0x0000FFFF)))
                         client_socket.sendall("Q amplitude set".encode("ascii"))
-                    elif "SP" in message:
+                    elif "SP " in message:
                         _,message = message.split("SP",1)
                         esbl.set_phase_difference(float(message))
                         client_socket.sendall("IQ phase difference set".encode("ascii"))
