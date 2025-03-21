@@ -287,6 +287,102 @@ connect_bd_net [get_bd_pins util_vector_logic_1/Res] [get_bd_pins frequency_chan
 connect_bd_net [get_bd_pins flag_manager_0/software_DMA_trigger] [get_bd_pins util_vector_logic_1/Op1]
 
 
+# Modification to add DC offsets to the I Q components
+# This should be only used only to test the effects of the impairments.
+
+update_compile_order -fileset sources_1
+update_compile_order -fileset sim_1
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:c_addsub:12.0 c_addsub_0
+endgroup
+copy_bd_objs /  [get_bd_cells {c_addsub_0}]
+set_property location {6.5 3212 -463} [get_bd_cells c_addsub_0]
+set_property location {6.5 3440 -458} [get_bd_cells c_addsub_1]
+group_bd_cells offset_adder [get_bd_cells c_addsub_0] [get_bd_cells c_addsub_1]
+set_property -dict [list CONFIG.B_Width.VALUE_SRC USER CONFIG.A_Width.VALUE_SRC USER CONFIG.B_Type.VALUE_SRC PROPAGATED] [get_bd_cells offset_adder/c_addsub_0]
+set_property -dict [list CONFIG.Implementation {DSP48} CONFIG.A_Width {16} CONFIG.B_Width {16} CONFIG.Latency {2} CONFIG.A_Width {16} CONFIG.B_Width {16} CONFIG.Out_Width {16} CONFIG.Latency {2} CONFIG.B_Value {0000000000000000}] [get_bd_cells offset_adder/c_addsub_0]
+delete_bd_objs [get_bd_cells offset_adder/c_addsub_1]
+copy_bd_objs offset_adder  [get_bd_cells {offset_adder/c_addsub_0}]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 offset_adder/xlslice_0
+endgroup
+copy_bd_objs offset_adder  [get_bd_cells {offset_adder/xlslice_0}]
+connect_bd_net [get_bd_pins offset_adder/xlslice_1/Din] [get_bd_pins offset_adder/xlslice_0/Din]
+connect_bd_net [get_bd_pins offset_adder/xlslice_0/Dout] [get_bd_pins offset_adder/c_addsub_1/A]
+connect_bd_net [get_bd_pins offset_adder/xlslice_1/Dout] [get_bd_pins offset_adder/c_addsub_0/A]
+startgroup
+set_property -dict [list CONFIG.DIN_FROM {31} CONFIG.DOUT_WIDTH {32}] [get_bd_cells offset_adder/xlslice_1]
+endgroup
+startgroup
+set_property -dict [list CONFIG.DIN_FROM {15} CONFIG.DOUT_WIDTH {16}] [get_bd_cells offset_adder/xlslice_1]
+endgroup
+startgroup
+set_property -dict [list CONFIG.DIN_TO {16} CONFIG.DIN_FROM {31} CONFIG.DOUT_WIDTH {16}] [get_bd_cells offset_adder/xlslice_0]
+endgroup
+set_property location {1 154 57} [get_bd_cells offset_adder/xlslice_1]
+copy_bd_objs offset_adder  [get_bd_cells {offset_adder/xlslice_1}]
+copy_bd_objs offset_adder  [get_bd_cells {offset_adder/xlslice_0}]
+connect_bd_net [get_bd_pins offset_adder/xlslice_3/Dout] [get_bd_pins offset_adder/c_addsub_0/B]
+connect_bd_net [get_bd_pins offset_adder/xlslice_2/Dout] [get_bd_pins offset_adder/c_addsub_1/B]
+connect_bd_net [get_bd_pins offset_adder/xlslice_3/Din] [get_bd_pins offset_adder/xlslice_2/Din]
+create_bd_pin -dir I -from 31 -to 0 offset_adder/I_Q
+set_property location {-7 62} [get_bd_pins offset_adder/I_Q]
+set_property location {-9 56} [get_bd_pins offset_adder/I_Q]
+startgroup
+copy_bd_objs offset_adder  [get_bd_pins {offset_adder/I_Q}]
+set_property location {-17 57} [get_bd_pins offset_adder/I_Q1]
+endgroup
+delete_bd_objs [get_bd_pins offset_adder/I_Q1]
+create_bd_pin -dir I offset_adder/OFFSETS
+connect_bd_net [get_bd_pins offset_adder/I_Q] [get_bd_pins offset_adder/xlslice_1/Din]
+connect_bd_net [get_bd_pins offset_adder/OFFSETS] [get_bd_pins offset_adder/xlslice_3/Din]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 offset_adder/xlconcat_0
+endgroup
+connect_bd_net [get_bd_pins offset_adder/xlconcat_0/In0] [get_bd_pins offset_adder/c_addsub_0/S]
+connect_bd_net [get_bd_pins offset_adder/xlconcat_0/In1] [get_bd_pins offset_adder/xlconcat_0/dout]
+undo
+connect_bd_net [get_bd_pins offset_adder/c_addsub_1/S] [get_bd_pins offset_adder/xlconcat_0/In1]
+create_bd_pin -dir O -from 31 -to 0 offset_adder/I_Q_OUT
+connect_bd_net [get_bd_pins offset_adder/I_Q_OUT] [get_bd_pins offset_adder/xlconcat_0/dout]
+startgroup
+set_property -dict [list CONFIG.IN1_WIDTH.VALUE_SRC USER CONFIG.IN0_WIDTH.VALUE_SRC USER] [get_bd_cells offset_adder/xlconcat_0]
+set_property -dict [list CONFIG.IN0_WIDTH {16} CONFIG.IN1_WIDTH {16}] [get_bd_cells offset_adder/xlconcat_0]
+endgroup
+startgroup
+create_bd_pin -dir I offset_adder/CLK
+connect_bd_net [get_bd_pins offset_adder/CLK] [get_bd_pins offset_adder/c_addsub_0/CLK]
+endgroup
+startgroup
+connect_bd_net [get_bd_pins offset_adder/CLK] [get_bd_pins offset_adder/c_addsub_1/CLK]
+endgroup
+startgroup
+create_bd_pin -dir I offset_adder/CE
+connect_bd_net [get_bd_pins offset_adder/CE] [get_bd_pins offset_adder/c_addsub_0/CE]
+endgroup
+startgroup
+connect_bd_net [get_bd_pins offset_adder/CE] [get_bd_pins offset_adder/c_addsub_1/CE]
+endgroup
+delete_bd_objs [get_bd_pins offset_adder/CE]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 offset_adder/xlconstant_0
+endgroup
+connect_bd_net [get_bd_pins offset_adder/xlconstant_0/dout] [get_bd_pins offset_adder/c_addsub_0/CE]
+save_bd_design
+update_compile_order -fileset sources_1
+set_property location {6.5 3115 -84} [get_bd_cells offset_adder]
+set_property location {4 1875 -635} [get_bd_cells offset_adder]
+delete_bd_objs [get_bd_nets phase_generator_0_packed_output]
+connect_bd_net [get_bd_pins phase_generator_0/packed_output] [get_bd_pins offset_adder/I_Q]
+connect_bd_net [get_bd_pins offset_adder/CLK] [get_bd_pins usp_rf_data_converter_0/clk_dac0]
+connect_bd_net [get_bd_pins ESBL_control_reg/reg_7] [get_bd_pins offset_adder/OFFSETS]
+connect_bd_net [get_bd_pins usp_rf_data_converter_0/s00_axis_tdata] [get_bd_pins usp_rf_data_converter_0/clk_dac0]
+undo
+connect_bd_net [get_bd_pins usp_rf_data_converter_0/s00_axis_tdata] [get_bd_pins offset_adder/I_Q_OUT]
+
+
+
+
 
 validate_bd_design
 
