@@ -3,82 +3,119 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="frequency_change_DMA_tb_behav.wdb" id="1">
+      <db_ref path="esb_module_tb_behav.wdb" id="1">
          <top_modules>
-            <top_module name="frequency_change_DMA_tb" />
+            <top_module name="esb_module_tb" />
             <top_module name="glbl" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="5,104.500 ns"></ZoomStartTime>
-      <ZoomEndTime time="5,610.737 ns"></ZoomEndTime>
-      <Cursor1Time time="10,000.000 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
+      <ZoomEndTime time="3,835.000001 us"></ZoomEndTime>
+      <Cursor1Time time="1,000.000000 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="110"></NameColumnWidth>
+      <NameColumnWidth column_width="106"></NameColumnWidth>
       <ValueColumnWidth column_width="66"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="15" />
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/aclk">
-      <obj_property name="ElementShortName">aclk</obj_property>
-      <obj_property name="ObjectShortName">aclk</obj_property>
+   <WVObjectSize size="7" />
+   <wvobject type="logic" fp_name="/esb_module_tb/clk">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/aresetn">
-      <obj_property name="ElementShortName">aresetn</obj_property>
-      <obj_property name="ObjectShortName">aresetn</obj_property>
+   <wvobject type="logic" fp_name="/esb_module_tb/res">
+      <obj_property name="ElementShortName">res</obj_property>
+      <obj_property name="ObjectShortName">res</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/frequency_change_DMA_tb/TDATA">
-      <obj_property name="ElementShortName">TDATA[63:0]</obj_property>
-      <obj_property name="ObjectShortName">TDATA[63:0]</obj_property>
+   <wvobject type="logic" fp_name="/esb_module_tb/clr">
+      <obj_property name="ElementShortName">clr</obj_property>
+      <obj_property name="ObjectShortName">clr</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/TVALID">
-      <obj_property name="ElementShortName">TVALID</obj_property>
-      <obj_property name="ObjectShortName">TVALID</obj_property>
+   <wvobject type="array" fp_name="/esb_module_tb/frequency_word">
+      <obj_property name="ElementShortName">frequency_word[31:0]</obj_property>
+      <obj_property name="ObjectShortName">frequency_word[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/frequency_change_DMA_tb/dut/state">
-      <obj_property name="ElementShortName">state[2:0]</obj_property>
-      <obj_property name="ObjectShortName">state[2:0]</obj_property>
+   <wvobject type="array" fp_name="/esb_module_tb/pdh_output">
+      <obj_property name="ElementShortName">pdh_output[7:0]</obj_property>
+      <obj_property name="ObjectShortName">pdh_output[7:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/frequency_change_DMA_tb/dut/timer">
-      <obj_property name="ElementShortName">timer[7:0]</obj_property>
-      <obj_property name="ObjectShortName">timer[7:0]</obj_property>
+   <wvobject type="array" fp_name="/esb_module_tb/packed_output">
+      <obj_property name="ElementShortName">packed_output[31:0]</obj_property>
+      <obj_property name="ObjectShortName">packed_output[31:0]</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dut/nco_busy">
-      <obj_property name="ElementShortName">nco_busy</obj_property>
-      <obj_property name="ObjectShortName">nco_busy</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dac0_nco_update_req">
-      <obj_property name="ElementShortName">dac0_nco_update_req</obj_property>
-      <obj_property name="ObjectShortName">dac0_nco_update_req</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dac0_nco_update_en">
-      <obj_property name="ElementShortName">dac0_nco_update_en</obj_property>
-      <obj_property name="ObjectShortName">dac0_nco_update_en</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dut/stop_flag">
-      <obj_property name="ElementShortName">stop_flag</obj_property>
-      <obj_property name="ObjectShortName">stop_flag</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/TRIGGER">
-      <obj_property name="ElementShortName">TRIGGER</obj_property>
-      <obj_property name="ObjectShortName">TRIGGER</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dut/trigger">
-      <obj_property name="ElementShortName">trigger</obj_property>
-      <obj_property name="ObjectShortName">trigger</obj_property>
-   </wvobject>
-   <wvobject type="logic" fp_name="/frequency_change_DMA_tb/dut/previous_trigger">
-      <obj_property name="ElementShortName">previous_trigger</obj_property>
-      <obj_property name="ObjectShortName">previous_trigger</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/frequency_change_DMA_tb/dac0_nco_freq">
-      <obj_property name="ElementShortName">dac0_nco_freq[47:0]</obj_property>
-      <obj_property name="ObjectShortName">dac0_nco_freq[47:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/frequency_change_DMA_tb/dut/timer">
-      <obj_property name="ElementShortName">timer[7:0]</obj_property>
-      <obj_property name="ObjectShortName">timer[7:0]</obj_property>
-      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   <wvobject type="vbus" fp_name="vbus151">
+      <obj_property name="label">I_out</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      <obj_property name="WaveformStyle">STYLE_ANALOG</obj_property>
+      <obj_property name="CellHeight">100</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[15]">
+         <obj_property name="ElementShortName">[15]</obj_property>
+         <obj_property name="ObjectShortName">[15]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[14]">
+         <obj_property name="ElementShortName">[14]</obj_property>
+         <obj_property name="ObjectShortName">[14]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[13]">
+         <obj_property name="ElementShortName">[13]</obj_property>
+         <obj_property name="ObjectShortName">[13]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[12]">
+         <obj_property name="ElementShortName">[12]</obj_property>
+         <obj_property name="ObjectShortName">[12]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[11]">
+         <obj_property name="ElementShortName">[11]</obj_property>
+         <obj_property name="ObjectShortName">[11]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[10]">
+         <obj_property name="ElementShortName">[10]</obj_property>
+         <obj_property name="ObjectShortName">[10]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[9]">
+         <obj_property name="ElementShortName">[9]</obj_property>
+         <obj_property name="ObjectShortName">[9]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[8]">
+         <obj_property name="ElementShortName">[8]</obj_property>
+         <obj_property name="ObjectShortName">[8]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[7]">
+         <obj_property name="ElementShortName">[7]</obj_property>
+         <obj_property name="ObjectShortName">[7]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[6]">
+         <obj_property name="ElementShortName">[6]</obj_property>
+         <obj_property name="ObjectShortName">[6]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[5]">
+         <obj_property name="ElementShortName">[5]</obj_property>
+         <obj_property name="ObjectShortName">[5]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[4]">
+         <obj_property name="ElementShortName">[4]</obj_property>
+         <obj_property name="ObjectShortName">[4]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[3]">
+         <obj_property name="ElementShortName">[3]</obj_property>
+         <obj_property name="ObjectShortName">[3]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[2]">
+         <obj_property name="ElementShortName">[2]</obj_property>
+         <obj_property name="ObjectShortName">[2]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[1]">
+         <obj_property name="ElementShortName">[1]</obj_property>
+         <obj_property name="ObjectShortName">[1]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/esb_module_tb/packed_output[0]">
+         <obj_property name="ElementShortName">[0]</obj_property>
+         <obj_property name="ObjectShortName">[0]</obj_property>
+      </wvobject>
    </wvobject>
 </wave_config>

@@ -20,9 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
+
 module esb_module_tb;
-
-
 
 reg clk = 1'b0;
 reg res = 1'b1;
@@ -44,7 +43,7 @@ wire [15:0] i;
 wire [15:0] q;
 wire [7:0] pdh_output;
 wire [7:0] pdh_output_par;
-wire [255:0] packed_output;
+wire [31:0] packed_output;
 
 
 
@@ -52,14 +51,16 @@ wire [255:0] packed_output;
 initial
 begin
 
+
+
 #5 frequency_word = 1460;
 #5 res = 1'b0;
 #200 clr = 1'b0;
 #20000 frequency_word = 2000000;
 
-//#20000 phase_PDH = 19'h08FFF;
+#20000 phase_PDH = 19'h08FFF;
 
-#20000 nco_freq = 2460000*65536;
+//#20000 nco_freq = 2460000*65536;
 
 
 //#200000 clr = 1'b1;
@@ -76,29 +77,8 @@ begin
 end
 
 
+phase_generator_parallel dut1(
 
-
-
-
-
-//phase_generator dut1(
-//	.f(frequency_word), //32 bit
-//	.phase(phase),   //23 bit
-//	.multiplier(multiplier),
-//	.i_amp(amp),
-//	.q_amp(amp),
-//	.phase_PDH(phase_PDH),
-//	.clr(clr),
-//	.i(i),
-//	.q(q),
-//	.pdh_output(pdh_output),
-//	.sys_clk(clk),
-//	.sys_rst(res));
-	
-	
-phase_generator_parallel dut2(
-    .f_1(nco_freq),
-    .p(nco_phase),
 	.f(frequency_word), //32 bit
 	.phase(phase),   //23 bit
 	.multiplier(multiplier),
@@ -107,9 +87,25 @@ phase_generator_parallel dut2(
 	.phase_PDH(phase_PDH),
 	.clr(clr),
 	.packed_output(packed_output),
-	.pdh_output(pdh_output_par),
+	.pdh_output(pdh_output),
 	.sys_clk(clk),
 	.sys_rst(res));
+	
+	
+//phase_generator_parallel dut2(
+//    .f_1(nco_freq),
+//    .p(nco_phase),
+//	.f(frequency_word), //32 bit
+//	.phase(phase),   //23 bit
+//	.multiplier(multiplier),
+//	.i_amp(amp_i),
+//	.q_amp(amp_q),
+//	.phase_PDH(phase_PDH),
+//	.clr(clr),
+//	.packed_output(packed_output),
+//	.pdh_output(pdh_output_par),
+//	.sys_clk(clk),
+//	.sys_rst(res));
 
 
 endmodule
