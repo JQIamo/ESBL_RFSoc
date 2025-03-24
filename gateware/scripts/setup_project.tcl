@@ -34,21 +34,10 @@ add_files -fileset constrs_1 -norecurse ./constraints/4x2_PMOD.xdc
 
 # Adding memory configuration files that are saved in the folder /hdl/lut/
 
-<<<<<<< HEAD
-set lutlist [dir ./hdl/lut/]
-set lutroot [file normalize ./hdl/lut/]
-foreach i $lutlist {add_files -norecurse ${lutroot}/${i} }
-=======
 set lutlist [glob -nocomplain ./hdl/lut/*]
 foreach i $lutlist {add_files -norecurse [file normalize ${i}] }
->>>>>>> 371af6e (changed unsupported <dir> wit <glob> in TCL script)
-
 
 update_compile_order -fileset sources_1
-
-
-
-
 
 #Adding all the external ports used for triggers and for PDH outputs 
 
