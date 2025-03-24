@@ -33,9 +33,8 @@ add_files -fileset constrs_1 -norecurse ./constraints/4x2_PMOD.xdc
 
 # Adding memory configuration files that are saved in the folder /hdl/lut/
 
-set lutlist [dir ./hdl/lut/]
-set lutroot [file normalize ./hdl/lut/]
-foreach i $lutlist {add_files -norecurse ${lutroot}/${i} }
+set lutlist [glob -nocomplain ./hdl/lut/*]
+foreach i $lutlist {add_files -norecurse [file normalize ${i}] }
 
 
 update_compile_order -fileset sources_1
