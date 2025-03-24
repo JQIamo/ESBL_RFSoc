@@ -1,10 +1,11 @@
 #!/bin/bash
-python ./esbl_and_NCO_with_PDH.py
-awk '{gsub(/readmemh\("/, "readmemh(\"/home/fpga/restelli_git/ESBL_RFSoc/gateware/hdl/lut/phase_generator_parallel/")} 1' phase_generator_parallel.v > tmp
+python esbl_parallel_with_PDH.py 
+
+# Renaming init files to mem files in code
+awk '{gsub(/init"/, "mem\"")} 1' phase_generator_parallel.v > tmp
 mv -f tmp phase_generator_parallel.v
 mv phase_generator_parallel.v ../hdl/
-mv *.init ../hdl/lut/phase_generator_parallel
+mv *.init ../hdl/lut
 
-
-# mv -f phase_generator.v ../build
-# mv -f *.init ../build
+# Change all init file extensions to mem
+for f in ../hdl/lut/*.init; do mv -- "$f" "${f%.init}.mem"; done

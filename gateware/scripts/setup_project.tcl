@@ -31,6 +31,12 @@ set_property xsim.view .sim/esb_module_tb_behav.wcfg [get_filesets sim_1]
 
 add_files -fileset constrs_1 -norecurse ./constraints/4x2_PMOD.xdc
 
+# Adding memory configuration files that are saved in the folder /hdl/lut/
+
+set lutlist [dir ./hdl/lut/]
+set lutroot [file normalize ./hdl/lut/]
+foreach i $lutlist {add_files -norecurse ${lutroot}/${i} }
+
 
 update_compile_order -fileset sources_1
 
